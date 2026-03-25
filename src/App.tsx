@@ -5,6 +5,7 @@ import { Bounce, ToastContainer } from "react-toastify";
 import Layout from "./components/Layout/Layout";
 import Auth from "./pages/Auth/Auth";
 import Home from "./pages/Home/Home";
+import Explore from "./pages/Explore/Explore";
 import Review from "./pages/Review/Review";
 import DestinationDetail from "./pages/DestinationDetail/DestinationDetail";
 
@@ -18,6 +19,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/review" element={<Review/>} />
             <Route path="/destination" element={<DestinationDetail/>} />
+            <Route path="/explore" element={<Explore/>} />
+
             <Route path="*" element={<div>404 Not Found</div>} />
           </Route>
 
