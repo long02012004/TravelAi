@@ -1,84 +1,106 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { 
+  CalendarBlank, 
+  Users, 
+  PencilSimple, 
+  Trash,
+  DotsThreeVertical,
+  MapPin,
+  Check
+} from "@phosphor-icons/react";
 import styles from './TripCard.module.scss';
 import type { TripPlan } from '../../types';
 
 interface Props {
-  trip: TripPlan;
+  data: TripPlan;
 }
 
-const TripCard: React.FC<Props> = ({ trip }) => {
-  // 1. Tính toán % hoàn thành checklist
-  const completed = trip.checklist.filter(i => i.isCompleted).length;
-  const total = trip.checklist.length;
-  const progress = total > 0 ? (completed / total) * 100 : 0;
+const TripCard: React.FC<Props> = ({ data }) => {
+  const [checklist, setChecklist] = useState(data.checklist);
 
-  // 2. Hàm xác định màu sắc dựa trên tiến độ (Tùy chọn thêm cho xịn)
-  const getProgressColor = () => {
-    if (progress < 30) return '#ef4444'; // Đỏ nếu chuẩn bị quá ít
-    if (progress < 70) return '#ff7a00'; // Cam nếu đang chuẩn bị
-    return '#3fc2b3'; // Xanh ngọc nếu gần xong
+  const getStatusLabel = (status: string) => {
+    switch(status) {
+      case 'upcoming': return 'Sắp tới';
+      case 'ongoing': return 'Đang đi';
+      case 'completed': return 'Đã xong';
+      default: return status;
+    }
   };
 
+  const toggleItem = (id: string) => {
+    setChecklist(prev => prev.map(item => 
+      item.id === id ? { ...item, isCompleted: !item.isCompleted } : item
+    ));
+  };
+
+  const completedChecks = checklist.filter(c => c.isCompleted).length;
+  const progressPercent = Math.round((completedChecks / checklist.length) * 100);
+
   return (
-    <div className={styles.card} data-aos="fade-up">
-      <div className={styles.imageHeader}>
-        <img src={trip.image} alt={trip.title} />
-        <span className={`${styles.badge} ${styles[trip.status]}`}>
-          {trip.status === 'upcoming' ? '• Sắp tới' : '• Hoàn thành'}
-        </span>
+    <div className={styles.tripCard} data-aos="fade-up">
+      <div className={styles.cardHeader}>
+        <img src={data.image} alt={data.title} className={styles.cardImage} />
+        <div className={styles.headerOverlays}>
+          <span className={`${styles.statusBadge} ${styles[data.status]}`}>
+            {getStatusLabel(data.status)}
+          </span>
+          <button className={styles.btnMenu}>
+            <DotsThreeVertical size={20} weight="bold" />
+          </button>
+        </div>
       </div>
 
-      <div className={styles.body}>
-        <h3 className={styles.title}>{trip.title}</h3>
-        <p className={styles.date}>{trip.dateRange}</p>
-
-        <div className={styles.quickStats}>
-          <span>📍 {trip.locationCount} điểm</span>
-          <span>👥 {trip.guestCount} khách</span>
-        </div>
-
-        {/* --- PHẦN MỚI: THANH TIẾN ĐỘ --- */}
-        <div className={styles.progressContainer}>
-          <div className={styles.progressText}>
-            <span>Độ sẵn sàng</span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <div className={styles.progressTrack}>
-            <div 
-              className={styles.progressFill} 
-              style={{ 
-                width: `${progress}%`,
-                backgroundColor: getProgressColor() 
-              }} 
-            />
+      <div className={styles.cardBody}>
+        <div className={styles.tripMainInfo}>
+          <h3 className={styles.tripTitle}>{data.title}</h3>
+          <div className={styles.metaRow}>
+            <div className={styles.metaItem}>
+              <CalendarBlank size={16} />
+              <span>{data.days} ngày</span>
+            </div>
+            <div className={styles.metaItem}>
+              <Users size={16} />
+              <span>{data.people} người</span>
+            </div>
           </div>
         </div>
-        {/* ------------------------------ */}
 
-        <div className={styles.detailsGrid}>
-          <span>📅 {trip.duration}</span>
-          <span>🍱 {trip.activityCount} hoạt động</span>
-          <span>🏨 {trip.hotelCount} khách sạn</span>
-        </div>
-
-        <div className={styles.checklist}>
-          <div className={styles.checkHeader}>
-            <h4>CHUẨN BỊ CHUYẾN ĐI</h4>
-            <button className={styles.addBtn}>+</button>
+        <div className={styles.timelineSection}>
+          <div className={styles.sectionTitle}>
+            <MapPin size={16} weight="bold" />
+            <span>CHUẨN BỊ LỘ TRÌNH</span>
+            <span className={styles.progressText}>{progressPercent}%</span>
           </div>
-          {trip.checklist.map(item => (
-            <label key={item.id} className={styles.checkItem}>
-              <input type="checkbox" defaultChecked={item.isCompleted} />
-              <span className={styles.customCheck}></span>
-              {item.label}
-            </label>
-          ))}
+          <div className={styles.checklistMini}>
+            {checklist.slice(0, 3).map(item => (
+              <label key={item.id} className={`${styles.checkItem} ${item.isCompleted ? styles.completed : ''}`}>
+                <div className={styles.checkboxContainer}>
+                  <input 
+                    type="checkbox" 
+                    checked={item.isCompleted} 
+                    onChange={() => toggleItem(item.id)} 
+                    className={styles.realCheckbox}
+                  />
+                  <span className={styles.customCheckbox}>
+                    {item.isCompleted && <Check size={12} weight="bold" />}
+                  </span>
+                </div>
+                <span className={styles.itemLabel}>{item.label}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
-        <div className={styles.actions}>
-          <button className={styles.btnView}>👁️</button>
-          <button className={styles.btnEdit}>✏️</button>
-          <button className={styles.btnDelete}>🗑️</button>
+        <div className={styles.cardFooter}>
+          <button className={styles.btnActionPrimary}>Xem chi tiết</button>
+          <div className={styles.actionGroup}>
+            <button className={styles.btnIcon} title="Chỉnh sửa">
+              <PencilSimple size={18} weight="bold" />
+            </button>
+            <button className={`${styles.btnIcon} ${styles.btnDelete}`} title="Xóa">
+              <Trash size={18} weight="bold" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

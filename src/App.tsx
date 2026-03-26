@@ -10,7 +10,9 @@ import Review from "./pages/Review/Review";
 import SampleItinerary from "./pages/SampleItinerary/SampleItinerary";
 import DestinationDetail from "./pages/DestinationDetail/DestinationDetail";
 import News from "./pages/News/News";
-import Dashboard from "./pages/Dashboard/Dashboard"
+import Dashboard from "./pages/Dashboard/Dashboard";
+import Planner from "./pages/Planner/Planner";
+import Profile from "./pages/Profile/Profile";
 
 function App() {
   return (
@@ -25,13 +27,15 @@ function App() {
             <Route path="/explore" element={<Explore />} />
             <Route path="/sample" element={<SampleItinerary />} />
             <Route path="/news" element={<News />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/planner" element={<Planner />} />
+            <Route path="/profile" element={<Profile />} />
 
             <Route path="*" element={<div>404 Not Found</div>} />
           </Route>
 
           {/* Group 2: Trang Auth thường không dùng chung Layout với Navbar */}
           <Route path="/auth" element={<Auth />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </BrowserRouter>
 

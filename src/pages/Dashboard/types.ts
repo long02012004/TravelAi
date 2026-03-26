@@ -8,12 +8,9 @@ export interface TripPlan {
   id: string;
   title: string;
   dateRange: string;
-  locationCount: number;
-  guestCount: number;
-  duration: string;
-  activityCount: number;
-  hotelCount: number;
-  status: 'upcoming' | 'completed';
+  days: number;
+  people: number;
   image: string;
+  status: 'upcoming' | 'ongoing' | 'completed';
   checklist: ChecklistItem[];
 }

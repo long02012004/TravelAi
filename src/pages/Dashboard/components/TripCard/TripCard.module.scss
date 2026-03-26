@@ -1,189 +1,256 @@
-$teal: #3fc2b3;
-$orange: #ff7a00;
+$primary: #ff7a00;
 $navy: #1a365d;
+$dark: #1a1a1a;
+$lightText: #718096;
 
-.card {
-  background: white;
+.tripCard {
+  background: #fff;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   border: 1px solid #f1f5f9;
-  transition: transform 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
 
   &:hover {
-    transform: translateY(-5px);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    border-color: rgba($primary, 0.2);
   }
 }
 
-.imageHeader {
+.cardHeader {
   position: relative;
-  height: 160px;
-  img {
+  height: 180px;
+
+  .cardImage {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-  .badge {
+
+  .headerOverlays {
     position: absolute;
-    top: 15px;
-    left: 15px;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 800;
-    color: white;
-    &.upcoming {
-      background: $teal;
-    }
-    &.completed {
-      background: #10b981;
-    }
-  }
-}
-
-.body {
-  padding: 24px;
-  .title {
-    font-size: 1.25rem;
-    color: $navy;
-    margin-bottom: 4px;
-    font-weight: 700;
-  }
-  .date {
-    font-size: 13px;
-    color: #94a3b8;
-    margin-bottom: 20px;
-  }
-}
-
-.quickStats,
-.detailsGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 15px;
-  font-size: 13px;
-  color: #475569;
-  font-weight: 500;
-}
-
-.checklist {
-  background: #f8fafc;
-  padding: 16px;
-  border-radius: 16px;
-  margin: 20px 0;
-
-  .checkHeader {
+    inset: 0;
+    padding: 16px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    h4 {
-      font-size: 11px;
+    align-items: flex-start;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%);
+  }
+}
+
+.statusBadge {
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #fff;
+  backdrop-filter: blur(8px);
+
+  &.upcoming { background: rgba($primary, 0.9); }
+  &.ongoing { background: rgba(#0ea5e9, 0.9); }
+  &.completed { background: rgba(#10b981, 0.9); }
+}
+
+.btnMenu {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: 0.3s;
+
+  &:hover { background: rgba(255, 255, 255, 0.4); }
+}
+
+.cardBody {
+  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tripMainInfo {
+  margin-bottom: 20px;
+
+  .tripTitle {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: $navy;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .metaRow {
+    display: flex;
+    gap: 15px;
+
+    .metaItem {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
       color: #94a3b8;
-      font-weight: 800;
-      letter-spacing: 1px;
-    }
-    .addBtn {
-      background: $orange;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      width: 22px;
-      height: 22px;
-      cursor: pointer;
-      font-weight: bold;
+
+      svg { color: $primary; }
     }
   }
+}
+
+.timelineSection {
+  background: #f8fafc;
+  padding: 15px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+
+  .sectionTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #64748b;
+    margin-bottom: 12px;
+    
+    svg { color: $primary; }
+
+    .progressText {
+      margin-left: auto;
+      color: $primary;
+    }
+  }
+}
+
+.checklistMini {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 
   .checkItem {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 10px;
-    font-size: 14px;
-    color: #334155;
     cursor: pointer;
-    input {
-      display: none;
+    padding: 2px 0;
+
+    .checkboxContainer {
+      position: relative;
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+
+      .realCheckbox {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0; width: 0;
+      }
+
+      .customCheckbox {
+        position: absolute;
+        top: 0; left: 0;
+        height: 20px; width: 20px;
+        background-color: #fff;
+        border: 2px solid #cbd5e1;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        color: transparent;
+      }
+
+      &:hover .customCheckbox {
+        border-color: $primary;
+        transform: scale(1.05);
+      }
+
+      .realCheckbox:checked ~ .customCheckbox {
+        background-color: #10b981;
+        border-color: #10b981;
+        color: white;
+      }
     }
-    .customCheck {
-      width: 18px;
-      height: 18px;
-      border: 2px solid #cbd5e1;
-      border-radius: 50%;
+
+    .itemLabel {
+      font-size: 13px;
+      font-weight: 700;
+      color: #475569;
       transition: 0.2s;
     }
-    input:checked + .customCheck {
-      background: $teal;
-      border-color: $teal;
-      position: relative;
-      &::after {
-        content: "✓";
-        color: white;
-        font-size: 10px;
-        position: absolute;
-        left: 3px;
-        top: -1px;
+
+    &.completed {
+      .itemLabel {
+        color: #94a3b8;
+        text-decoration: line-through;
+        text-decoration-thickness: 1.5px;
       }
-    }
-    &:last-child {
-      margin-bottom: 0;
     }
   }
 }
+ Riverside, CA
 
-.actions {
+.cardFooter {
+  margin-top: auto;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  button {
+
+  .btnActionPrimary {
     flex: 1;
-    padding: 10px;
+    background: $primary;
+    color: #fff;
+    border: none;
+    padding: 12px;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    background: white;
+    font-weight: 800;
+    font-size: 14px;
     cursor: pointer;
     transition: 0.3s;
+
     &:hover {
-      background: #f1f5f9;
-      border-color: #cbd5e1;
-    }
-    &.btnView {
-      background: $orange;
-      color: white;
-      border: none;
-      &:hover {
-        background: darken($orange, 5%);
-      }
+      box-shadow: 0 8px 16px rgba($primary, 0.2);
     }
   }
-}
-.progressContainer {
-  margin: 15px 0;
 
-  .progressText {
+  .actionGroup {
     display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    font-weight: 800;
+    gap: 8px;
+  }
+
+  .btnIcon {
+    width: 44px;
+    height: 44px;
+    background: #fff;
+    border: 1px solid #f1f5f9;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #94a3b8;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+    cursor: pointer;
+    transition: 0.3s;
 
-  .progressTrack {
-    height: 6px;
-    background: #e2e8f0;
-    border-radius: 10px;
-    overflow: hidden;
-  }
+    &:hover {
+      color: $primary;
+      border-color: rgba($primary, 0.3);
+      background: rgba($primary, 0.05);
+    }
 
-  .progressFill {
-    height: 100%;
-    border-radius: 10px;
-    transition:
-      width 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-      background-color 0.3s ease;
+    &.btnDelete:hover {
+      color: #f43f5e;
+      border-color: rgba(#f43f5e, 0.3);
+      background: rgba(#f43f5e, 0.05);
+    }
   }
 }
