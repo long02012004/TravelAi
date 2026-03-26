@@ -13,6 +13,8 @@ import News from "./pages/News/News";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Planner from "./pages/Planner/Planner";
 import Profile from "./pages/Profile/Profile";
+import Admin from "./pages/Admin/AdminDashboard";
+import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
 
 function App() {
   return (
@@ -35,7 +37,9 @@ function App() {
 
           {/* Group 2: Trang Auth thường không dùng chung Layout với Navbar */}
           <Route path="/auth" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </BrowserRouter>
 
