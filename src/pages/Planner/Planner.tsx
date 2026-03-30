@@ -17,7 +17,7 @@ const INTERESTS: InterestOption[] = [
 
 const Planner: React.FC = () => {
   const [formData, setFormData] = useState<PlannerFormData>({
-    destination: "Đà Nẵng",
+    destination: "",
     travelDate: "",
     interests: ["Ẩm thực", "Thiên nhiên"],
     budget: "Tiết kiệm (Dưới 5 triệu)",

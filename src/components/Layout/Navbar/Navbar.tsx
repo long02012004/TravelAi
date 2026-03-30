@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sparkle,
   CaretDown,
@@ -8,21 +7,58 @@ import {
   MapTrifold,
   SignOut,
 } from "phosphor-react";
+import { toast } from "react-toastify"; // Đảm bảo đã import toast
 import styles from "./Navbar.module.scss";
 import { logo } from "../../../assets/images/img";
 
 const Navbar: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Temporary state for demonstration
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    const token = localStorage.getItem("token");
+    return !!token;
+  });
+  const [username, setUsername] = useState(() => {
+    return localStorage.getItem("username") || "";
+  });
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Kiểm tra trạng thái đăng nhập mỗi khi đường dẫn (location) thay đổi
+  // 2. Cập nhật state khi chuyển hướng trang
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const storedUsername = localStorage.getItem("username") || "Người dùng";
+
+    const hasToken = !!token;
+
+    // Chỉ cập nhật nếu giá trị thực tế khác với giá trị trong State hiện tại
+    if (hasToken !== isLoggedIn) {
+      setIsLoggedIn(hasToken);
+    }
+
+    if (storedUsername !== username) {
+      setUsername(storedUsername);
+    }
+
+    // Lưu ý: Không đưa 'isLoggedIn' và 'username' vào mảng dependencies
+    // để tránh tình trạng "cascading renders" (render thác đổ).
+  }, [location]);
   const isActive = (path: string) => location.pathname === path;
+
   const handleLogOut = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    console.log("User logged out");
+
+    // 1. Xóa sạch dữ liệu trong LocalStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+
+    // 2. Cập nhật state
     setIsLoggedIn(false);
+
+    // 3. Thông báo và điều hướng
+    toast.info("Đã đăng xuất thành công!");
     navigate("/auth");
   };
+
   return (
     <header
       className={styles.navbar}
@@ -46,7 +82,6 @@ const Navbar: React.FC = () => {
           >
             Khám phá
           </Link>
-
           <Link
             to="/sample"
             className={isActive("/sample") ? styles.active : ""}
@@ -68,25 +103,26 @@ const Navbar: React.FC = () => {
           {isLoggedIn ? (
             <div className={styles.userDropdown}>
               <div className={styles.userTrigger}>
+                {/* Sử dụng UI Avatars để tạo ảnh đại diện theo tên cho đẹp */}
                 <img
-                  src="https://i.pravatar.cc/150?u=a042581f4e29026704d"
+                  src={`https://ui-avatars.com/api/?name=${username}&background=random&color=fff`}
                   alt="User Avatar"
                 />
-                <span className={styles.userName}>Người dùng</span>
+                <span className={styles.userName}>{username}</span>
                 <CaretDown weight="bold" />
               </div>
               <div className={styles.dropdownMenu}>
                 <div className={styles.dropdownHeader}>
                   <span>Tài khoản</span>
-                  <div className={styles.userDisplayName}>Người dùng</div>
+                  <div className={styles.userDisplayName}>{username}</div>
                 </div>
-                <Link to="/profile">
+                <Link to="/profile" className={styles.dropdownItem}>
                   <UserCircle size={20} /> Trang cá nhân
                 </Link>
-                <Link to="/planner">
+                <Link to="/planner" className={styles.dropdownItem}>
                   <MapTrifold size={20} /> Lịch trình của tôi
                 </Link>
-                <Link to="/ai-suggestions">
+                <Link to="/ai-suggestions" className={styles.dropdownItem}>
                   <Sparkle size={20} /> Gợi ý từ AI
                 </Link>
                 <div className={styles.dropdownDivider}></div>
@@ -100,14 +136,14 @@ const Navbar: React.FC = () => {
               </div>
             </div>
           ) : (
-            <>
+            <div className={styles.authGroup}>
               <Link to="/auth" className={styles.loginBtn}>
                 Đăng nhập
               </Link>
               <Link to="/auth" className={styles.ctaBtn}>
                 Bắt đầu ngay
               </Link>
-            </>
+            </div>
           )}
         </div>
       </div>

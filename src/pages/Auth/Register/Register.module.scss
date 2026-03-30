@@ -127,6 +127,19 @@
       }
 
       input {
+        &:-webkit-autofill,
+        &:-webkit-autofill:hover,
+        &:-webkit-autofill:focus,
+        &:-webkit-autofill:active {
+          // Dùng box-shadow để đè màu nền (thay #ffffff bằng màu bạn muốn)
+          -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+
+          // Chỉnh màu chữ hiển thị
+          -webkit-text-fill-color: #1e293b !important;
+
+          // Giúp màu nền không bị nháy lại màu cũ
+          transition: background-color 5000s ease-in-out 0s;
+        }
         width: 100%;
         padding: 4px 16px 10px 48px;
         border: 1.5px solid #e2e8f0;
@@ -253,5 +266,12 @@
       color: #ff8a3d;
       text-decoration: underline;
     }
+  }
+}
+.btnSubmit {
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
   }
 }

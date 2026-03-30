@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   RocketLaunch,
@@ -8,9 +8,77 @@ import {
   Users,
   Sparkle,
 } from "phosphor-react";
+
 import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.min.css"; // Đảm bảo đã import CSS của thư viện
 import VideoHome from "../../../../assets/video/Da_Nang.mp4";
-import styles from "../../Home.module.scss"; // Tạm thời dùng chung file styles cũ của bạn
+import styles from "../../Home.module.scss";
+
+const VIETNAM_PROVINCES = [
+  "An Giang",
+  "Bà Rịa - Vũng Tàu",
+  "Bạc Liêu",
+  "Bắc Giang",
+  "Bắc Kạn",
+  "Bắc Ninh",
+  "Bến Tre",
+  "Bình Dương",
+  "Bình Định",
+  "Bình Phước",
+  "Bình Thuận",
+  "Cà Mau",
+  "Cao Bằng",
+  "Cần Thơ",
+  "Đà Nẵng",
+  "Đắk Lắk",
+  "Đắk Nông",
+  "Điện Biên",
+  "Đồng Nai",
+  "Đồng Tháp",
+  "Gia Lai",
+  "Hà Giang",
+  "Hà Nam",
+  "Hà Nội",
+  "Hà Tĩnh",
+  "Hải Dương",
+  "Hải Phòng",
+  "Hậu Giang",
+  "Hòa Bình",
+  "Hưng Yên",
+  "Khánh Hòa",
+  "Kiên Giang",
+  "Kon Tum",
+  "Lai Châu",
+  "Lạng Sơn",
+  "Lào Cai",
+  "Lâm Đồng",
+  "Long An",
+  "Nam Định",
+  "Nghệ An",
+  "Ninh Bình",
+  "Ninh Thuận",
+  "Phú Thọ",
+  "Phú Yên",
+  "Quảng Bình",
+  "Quảng Nam",
+  "Quảng Ngãi",
+  "Quảng Ninh",
+  "Quảng Trị",
+  "Sóc Trăng",
+  "Sơn La",
+  "Tây Ninh",
+  "Thái Bình",
+  "Thái Nguyên",
+  "Thanh Hóa",
+  "Thừa Thiên Huế",
+  "Tiền Giang",
+  "TP Hồ Chí Minh",
+  "Trà Vinh",
+  "Tuyên Quang",
+  "Vĩnh Long",
+  "Vĩnh Phúc",
+  "Yên Bái",
+];
 
 const Hero: React.FC = () => {
   const navigate = useNavigate();
@@ -18,18 +86,54 @@ const Hero: React.FC = () => {
   const [dates, setDates] = useState("");
   const [guests, setGuests] = useState("");
 
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    flatpickr("#dates-input", {
+    if (!dateInputRef.current) return;
+
+    // Khởi tạo Flatpickr
+    const fp = flatpickr(dateInputRef.current, {
       mode: "range",
       minDate: "today",
       dateFormat: "d/m/Y",
+      allowInput: false,
+      locale: {
+        rangeSeparator: " - ",
+      },
+      // Cập nhật state ngay khi người dùng chọn ngày
+      onChange: (selectedDates, dateStr) => {
+        setDates(dateStr);
+      },
     });
+
+    // Cleanup khi component bị hủy (Tránh rò rỉ bộ nhớ)
+    return () => {
+      if (fp) {
+        if (Array.isArray(fp)) {
+          // Nếu là mảng, duyệt qua từng cái để destroy
+          fp.forEach((instance) => instance.destroy());
+        } else {
+          // Nếu là đối tượng đơn lẻ
+          fp.destroy();
+        }
+      }
+    };
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("đang phát triển chức năng này ");
-    navigate("#");
+
+    // 1. Đóng gói dữ liệu vào một Object
+    const tripData = {
+      destination: dest,
+      dateRange: dates,
+      totalGuests: guests,
+      // Bạn có thể thêm các thông tin ẩn khác ở đây
+      searchAt: new Date().toISOString(),
+    };
+
+    // 2. Truyền đi thông qua tham số thứ 2 của navigate
+    navigate("/planner", { state: tripData });
   };
 
   return (
@@ -78,13 +182,14 @@ const Hero: React.FC = () => {
           </Link>
         </div>
 
-        {/* Search Widget */}
+        {/* --- Search Widget --- */}
         <div
           className={styles.heroSearchWrapper}
           data-aos="zoom-in-up"
           data-aos-delay="1000"
         >
           <form className={styles.premiumSearchWidget} onSubmit={handleSearch}>
+            {/* Field: Điểm đến */}
             <div className={styles.searchField}>
               <div className={styles.fieldIcon}>
                 <MapPin weight="duotone" />
@@ -93,14 +198,23 @@ const Hero: React.FC = () => {
                 <label>Điểm đến</label>
                 <input
                   type="text"
+                  list="vietnam-provinces"
                   placeholder="Bạn muốn đi đâu?"
                   required
                   value={dest}
                   onChange={(e) => setDest(e.target.value)}
                 />
+                <datalist id="vietnam-provinces">
+                  {VIETNAM_PROVINCES.map((province) => (
+                    <option key={province} value={province} />
+                  ))}
+                </datalist>
               </div>
             </div>
+
             <div className={styles.searchDivider}></div>
+
+            {/* Field: Ngày tháng */}
             <div className={styles.searchField}>
               <div className={styles.fieldIcon}>
                 <CalendarBlank weight="duotone" />
@@ -109,15 +223,19 @@ const Hero: React.FC = () => {
                 <label>Ngày đi - Ngày về</label>
                 <input
                   type="text"
+                  ref={dateInputRef}
                   id="dates-input"
                   placeholder="Thêm ngày"
                   required
-                  value={dates}
-                  onChange={(e) => setDates(e.target.value)}
+                  // value={dates} // Bỏ value để Flatpickr tự quản lý UI, tránh bị React reset khi re-render
+                  readOnly // Quan trọng: Để Flatpickr kiểm soát hoàn toàn
                 />
               </div>
             </div>
+
             <div className={styles.searchDivider}></div>
+
+            {/* Field: Số khách */}
             <div className={styles.searchField}>
               <div className={styles.fieldIcon}>
                 <Users weight="duotone" />
@@ -134,6 +252,7 @@ const Hero: React.FC = () => {
                 />
               </div>
             </div>
+
             <button type="submit" className={styles.btnSearchSubmit}>
               <Sparkle weight="fill" /> <span>Tạo lịch trình</span>
             </button>

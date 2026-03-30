@@ -1,0 +1,27 @@
+{
+  "users": [
+    {
+      "id": "06ba",
+      "username": "nguyễn quang long",
+      "email": "nguyenquanglong100285@gmail.com",
+      "password": "Long123123",
+      "createdAt": "2026-03-28T03:43:40.064Z"
+    },
+    {
+      "username": "test",
+      "email": "test@gmail.com",
+      "password": "Long123456",
+      "createdAt": "2026-03-28T06:22:35.339Z",
+      "id": "ivOX48lxqP0"
+    },
+    {
+      "username": "skjgggggg",
+      "email": "adsdd@gmai.com",
+      "password": "Long02012004",
+      "createdAt": "2026-03-28T06:41:45.262Z",
+      "id": "YRd7pk4rKY8"
+    }
+  ],
+  "travel-plans": [],
+  "$schema": "./node_modules/json-server/schema.json"
+}

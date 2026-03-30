@@ -10,6 +10,10 @@ import {
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import styles from "./Login.module.scss";
+import { useGoogleLogin } from "@react-oauth/google";
+import type { UserData } from "../../../services/userService";
+import { postLogin, postLoginGoogle } from "../../../services/userService";
+import axios from "axios";
 
 interface Props {
   onToggle: () => void;
@@ -20,12 +24,70 @@ const Login: React.FC<Props> = ({ onToggle, navigate }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // 1. Xử lý đăng nhập Google
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        setIsLoading(true);
+        const response = await postLoginGoogle(tokenResponse.access_token);
+        if (response.data && response.data.EC === 0) {
+          localStorage.setItem("token", `google_token_${response.data.DT.id}`);
+          toast.success("Đăng nhập Google thành công! 🚀");
+          navigate("/");
+        }
+      } catch (error) {
+        toast.error("Lỗi đăng nhập Google!");
+        console.error("Error logging in with Google:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+  });
+
+  // 2. Xử lý đăng nhập Email/Password
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) return toast.error("Mật khẩu tối thiểu 6 ký tự!");
-    toast.success("Chào mừng bạn trở lại! 👋");
-    navigate("/");
+
+    // --- Validation ---
+    const cleanEmail = email.trim();
+    const isValidEmail = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
+
+    if (!cleanEmail || !password) {
+      return toast.error("Vui lòng nhập đầy đủ thông tin!");
+    }
+    if (!isValidEmail.test(cleanEmail)) {
+      return toast.error("Email không đúng định dạng!");
+    }
+
+    setIsLoading(true);
+    try {
+      // Gọi hàm postLogin (JSON Server trả về mảng DT: UserData[])
+      const response = await postLogin(cleanEmail, password);
+      const userList = response.data.DT as UserData[];
+
+      if (userList && userList.length > 0) {
+        const user = userList[0];
+
+        // Lưu thông tin vào LocalStorage
+        localStorage.setItem("token", `mock_token_${user.id}`);
+        localStorage.setItem("username", user.username);
+
+        toast.success(`Chào mừng ${user.username} trở lại! 👋`);
+        navigate("/");
+      } else {
+        toast.error("Email hoặc mật khẩu không chính xác!");
+      }
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast.error("Lỗi kết nối Server Local (8081)!");
+      } else {
+        toast.error("Đã xảy ra lỗi không xác định!");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -36,13 +98,19 @@ const Login: React.FC<Props> = ({ onToggle, navigate }) => {
       </div>
 
       <div className={styles.socialButtons}>
-        <button className={`${styles.socialBtn} ${styles.google}`}>
-          <GoogleLogo size={20} />
-          Google
+        <button
+          type="button"
+          className={`${styles.socialBtn} ${styles.google}`}
+          onClick={() => loginWithGoogle()}
+          disabled={isLoading}
+        >
+          <GoogleLogo size={20} /> Google
         </button>
-        <button className={`${styles.socialBtn} ${styles.facebook}`}>
-          <FacebookLogo weight="fill" size={20} />
-          Facebook
+        <button
+          type="button"
+          className={`${styles.socialBtn} ${styles.facebook}`}
+        >
+          <FacebookLogo weight="fill" size={20} /> Facebook
         </button>
       </div>
 
@@ -54,7 +122,7 @@ const Login: React.FC<Props> = ({ onToggle, navigate }) => {
         <div className={styles.group}>
           <div className={styles.labelRow}>
             <label>Email của bạn</label>
-          </div>
+          </div>{" "}
           <div className={styles.inputWrap}>
             <EnvelopeSimple className={styles.icon} weight="duotone" />
             <input
@@ -63,6 +131,7 @@ const Login: React.FC<Props> = ({ onToggle, navigate }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -82,6 +151,7 @@ const Login: React.FC<Props> = ({ onToggle, navigate }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={isLoading}
             />
             <span
               className={styles.eye}
@@ -96,13 +166,16 @@ const Login: React.FC<Props> = ({ onToggle, navigate }) => {
           </div>
         </div>
 
-        <button type="submit" className={styles.btnSubmit}>
-          Đăng nhập
+        <button type="submit" className={styles.btnSubmit} disabled={isLoading}>
+          {isLoading ? "Đang kiểm tra..." : "Đăng nhập"}
         </button>
       </form>
 
       <div className={styles.footer}>
-        Bạn chưa có tài khoản? <button onClick={onToggle}>Đăng ký ngay</button>
+        Bạn chưa có tài khoản?{" "}
+        <button type="button" onClick={onToggle}>
+          Đăng ký ngay
+        </button>
       </div>
     </div>
   );

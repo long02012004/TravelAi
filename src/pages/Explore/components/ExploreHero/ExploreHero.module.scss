@@ -9,12 +9,17 @@ $accent-orange-light: rgba(255, 255, 255, 0.8);
   position: relative;
   overflow: hidden;
   padding: 150px 20px 70px;
-  background: linear-gradient(
+  /*   background: linear-gradient(
     135deg,
     $hero-gradient-start 0%,
     $hero-gradient-mid 50%,
     $hero-gradient-end 100%
-  );
+  ); */
+  background-image: url("../../../../assets/images/img/dragonBridge.jpg")
+    /* Sử dụng hình nền gradient đã tạo sẵn */;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
   text-align: center;
   margin: 70px 0;
 
