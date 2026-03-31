@@ -1,11 +1,14 @@
 import AOS from "aos";
 import "aos/dist/aos.css";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 // Import các Component con
 import { getPlaceDetail, getPlaceReviews } from "../../services";
+import type { Place } from "../../services/placeService";
+import type { Review } from "../../services/reviewService";
+import type { BackendResponse } from "../../types";
 import HighlightLocations from "../Home/components/HighlightLocations/HighlightLocations";
 import styles from "./DestinationDetail.module.scss";
 import DestHero from "./components/DestHero/DestHero";
@@ -200,26 +203,22 @@ const DestinationDetail: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const mockData = destinationsData[slug || "vinh-ha-long"];
 
-  useEffect(() => {
-    AOS.init({ duration: 800, once: true });
-    window.scrollTo(0, 0);
-    fetchPlaceDetail();
-  }, [slug]);
-
-  const fetchPlaceDetail = async () => {
+  const fetchPlaceDetail = useCallback(async () => {
     try {
       setLoading(true);
       if (!slug) return;
 
-      // Try to fetch from API using slug
       const result = await getPlaceDetail(slug);
       if (result?.data) {
-        // Map API response to Destination interface
-        const placeData = result.data;
+        const placeDto =
+          (result.data as BackendResponse<Place>).DT ||
+          (result.data as unknown as Place);
+        const placeData: Place = placeDto;
+
         const enrichedData: Destination = {
-          title: placeData.name || mockData.title,
-          location:
-            placeData.location || placeData.address || mockData.location,
+          id: placeData.id || mockData.id || 0,
+          title: placeData.title || mockData.title,
+          location: placeData.location || mockData.location,
           heroImage:
             placeData.image || placeData.thumbnail || mockData.heroImage,
           rating: placeData.rating?.toString() || mockData.rating,
@@ -230,7 +229,9 @@ const DestinationDetail: React.FC = () => {
           category: placeData.category || mockData.category,
           description: placeData.description || mockData.description,
           gallery: placeData.gallery || placeData.images || mockData.gallery,
-          services: placeData.services || mockData.services,
+          services: Array.isArray(placeData.services)
+            ? placeData.services
+            : mockData.services,
           reviewsData: placeData.reviewsData || mockData.reviewsData,
           travelTips: placeData.tips || mockData.travelTips,
           weatherCurrent: placeData.weather || mockData.weatherCurrent,
@@ -242,37 +243,46 @@ const DestinationDetail: React.FC = () => {
         };
         setData(enrichedData);
 
-        // Also fetch reviews separately
         const reviewsResult = await getPlaceReviews(slug, 0, 10);
         if (reviewsResult?.data) {
-          // Update reviews data if fetch was successful
+          const incomingReviews =
+            (reviewsResult.data as BackendResponse<Review[]>).DT || [];
+          const normalizedReviews = incomingReviews.map((r) => ({
+            user: r.userName || r.user || "Khách",
+            avatar: r.userAvatar || "",
+            rating: r.rating,
+            date: r.createdAt || "",
+            tag: "",
+            content: r.content,
+            images: r.images || [],
+          }));
+
           setData((prev) =>
             prev
               ? {
                   ...prev,
                   reviewsData: {
                     ...prev.reviewsData,
-                    list: Array.isArray(reviewsResult.data)
-                      ? reviewsResult.data
-                      : prev.reviewsData.list,
+                    list: normalizedReviews,
                   },
                 }
               : null,
           );
         }
-      } else {
-        // Fallback to mock data
-        setData(mockData);
       }
     } catch (error) {
-      console.error("Error fetching place detail:", error);
-      toast.error("Lỗi khi tải thông tin địa điểm");
-      // Use mock data as fallback
-      setData(mockData);
+      console.error(error);
+      toast.error("Lỗi khi tải địa điểm");
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug, mockData]);
+
+  useEffect(() => {
+    AOS.init({ duration: 800, once: true });
+    window.scrollTo(0, 0);
+    fetchPlaceDetail();
+  }, [slug, fetchPlaceDetail]);
 
   if (loading || !data)
     return <div className={styles.loading}>Đang tải dữ liệu...</div>;

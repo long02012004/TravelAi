@@ -31,12 +31,18 @@ const Planner: React.FC = () => {
 
   const { mutate: generatePlan, loading: isGenerating } = useMutation(
     async (data: PlannerFormData) => {
+      const budgetNumber =
+        Number(data.budget.toString().replace(/[\D]/g, "")) || 0;
       const response = await generateItinerary({
         destination: data.destination,
-        travelDate: data.travelDate,
         interests: data.interests,
-        budget: data.budget,
+        budget: budgetNumber,
         peopleGroup: data.peopleGroup,
+        startDate: data.travelDate,
+        endDate: data.travelDate,
+        numberOfDays: 1,
+        numberOfPeople: 1,
+        travelStyle: "budget",
       });
       return response;
     },
@@ -77,11 +83,11 @@ const Planner: React.FC = () => {
 
     try {
       const result = await generatePlan(formData);
-      if (result && result.data) {
+      if (result) {
         toast.success("Lập kế hoạch thành công! Đang chuyển hướng...");
         // Navigate to itinerary detail page with generated plan
         setTimeout(() => {
-          navigate("/planner/results", { state: result.data });
+          navigate("/planner/results", { state: result });
         }, 1500);
       }
     } catch (error) {

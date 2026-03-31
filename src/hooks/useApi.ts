@@ -1,5 +1,6 @@
-import type { AxiosError } from "axios";
-import { useCallback, useEffect, useState } from "react";
+import type { AxiosError, AxiosResponse } from "axios";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { BackendResponse } from "../types";
 
 // Generic hook interface
 export interface UseApiState<T> {
@@ -20,7 +21,6 @@ export interface UseApiResponse<T> extends UseApiState<T> {
  */
 export function useApi<T>(
   apiCall: () => Promise<{ data: { DT: T } }>,
-  dependencies: unknown[] = [],
 ): UseApiResponse<T> {
   const [state, setState] = useState<UseApiState<T>>({
     data: null,
@@ -28,7 +28,7 @@ export function useApi<T>(
     error: null,
   });
 
-  const fetchData = useCallback(async () => {
+  const refetch = useCallback(async () => {
     setState({ data: null, loading: true, error: null });
     try {
       const response = await apiCall();
@@ -44,10 +44,37 @@ export function useApi<T>(
   }, [apiCall]);
 
   useEffect(() => {
-    fetchData();
-  }, dependencies);
+    const controller = new AbortController();
+    let isMounted = true;
 
-  return { ...state, refetch: fetchData };
+    const fetchData = async () => {
+      if (isMounted) setState({ data: null, loading: true, error: null });
+      try {
+        const response = await apiCall();
+        if (isMounted) {
+          setState({ data: response.data.DT, loading: false, error: null });
+        }
+      } catch (err) {
+        if (isMounted && !controller.signal.aborted) {
+          const error = err as AxiosError;
+          setState({
+            data: null,
+            loading: false,
+            error: error?.message || "Failed to fetch data",
+          });
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [apiCall]);
+
+  return { ...state, refetch };
 }
 
 /**
@@ -55,15 +82,19 @@ export function useApi<T>(
  * @returns Object with mutate function and state
  */
 export interface UseMutationResponse<T, E = unknown> {
-  mutate: (args?: E) => Promise<T | null>;
+  mutate: (args: E) => Promise<T | null>;
   data: T | null;
   loading: boolean;
   error: string | null;
   reset: () => void;
 }
 
+type MutationResponse<T> = { data: { DT: T } } | AxiosResponse<{ DT: T }>;
+
+type MutationFn<T, E> = (args: E) => Promise<MutationResponse<T>>;
+
 export function useMutation<T, E = unknown>(
-  mutationFn: (args?: E) => Promise<{ data: { DT: T } }>,
+  mutationFn: MutationFn<T, E>,
 ): UseMutationResponse<T, E> {
   const [state, setState] = useState<UseApiState<T>>({
     data: null,
@@ -72,13 +103,44 @@ export function useMutation<T, E = unknown>(
   });
 
   const mutate = useCallback(
-    async (args?: E) => {
+    async (args: E) => {
       setState({ data: null, loading: true, error: null });
       try {
         const response = await mutationFn(args);
-        const result = response.data.DT;
-        setState({ data: result, loading: false, error: null });
-        return result;
+
+        const isAxiosResponse = (
+          value: unknown,
+        ): value is AxiosResponse<BackendResponse<T>> =>
+          typeof value === "object" &&
+          value !== null &&
+          "status" in value &&
+          "data" in value;
+
+        if (isAxiosResponse(response)) {
+          const apiData = response.data;
+
+          if (apiData.EC !== 0) {
+            throw new Error(
+              apiData.EM || "Mutation returned error from server",
+            );
+          }
+
+          if (apiData.DT === undefined || apiData.DT === null) {
+            throw new Error("Mutation returned invalid payload");
+          }
+
+          setState({ data: apiData.DT, loading: false, error: null });
+          return apiData.DT;
+        }
+
+        const rawData = (response as { data: { DT: T } }).data?.DT;
+
+        if (rawData === undefined || rawData === null) {
+          throw new Error("Mutation returned invalid payload");
+        }
+
+        setState({ data: rawData, loading: false, error: null });
+        return rawData;
       } catch (err) {
         const error = err as AxiosError;
         const errorMessage = error?.message || "Failed to perform action";
@@ -154,7 +216,7 @@ export function usePagination<T>(
 
   useEffect(() => {
     fetchPage(1);
-  }, [apiCall, pageSize]);
+  }, [fetchPage]);
 
   const goToPage = useCallback(
     async (page: number) => {
@@ -251,40 +313,41 @@ export function useSearch<T>(
   const [results, setResults] = useState<T[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const timeoutRef = useCallback(
-    (callback: () => void) => {
-      let timeout: ReturnType<typeof setTimeout>;
-      return () => {
-        clearTimeout(timeout);
-        timeout = setTimeout(callback, debounceDelay);
-      };
-    },
-    [debounceDelay],
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
   );
 
   const search = useCallback(
-    timeoutRef(() => (keyword: string) => {
+    (keyword: string) => {
       if (!keyword.trim()) {
         setResults([]);
+        setLoading(false);
         return;
       }
 
-      setLoading(true);
-      setError(null);
+      // Clear previous timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
 
-      searchFn(keyword)
-        .then((response) => {
-          setResults(response.data.DT);
-          setLoading(false);
-        })
-        .catch((err) => {
-          const error = err as AxiosError;
-          setError(error?.message || "Search failed");
-          setLoading(false);
-        });
-    }),
-    [searchFn, timeoutRef],
+      // Set new timeout for debounce
+      timeoutRef.current = setTimeout(() => {
+        setLoading(true);
+        setError(null);
+
+        searchFn(keyword)
+          .then((response) => {
+            setResults(response.data.DT);
+            setLoading(false);
+          })
+          .catch((err) => {
+            const error = err as AxiosError;
+            setError(error?.message || "Search failed");
+            setLoading(false);
+          });
+      }, debounceDelay);
+    },
+    [searchFn, debounceDelay],
   );
 
   return {
@@ -292,7 +355,7 @@ export function useSearch<T>(
     results,
     loading,
     error,
-    search: search as (keyword: string) => void,
+    search,
   };
 }
 

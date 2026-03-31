@@ -1,6 +1,6 @@
 import AOS from "aos";
 import "aos/dist/aos.css";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import styles from "./Dashboard.module.scss";
 
@@ -13,7 +13,7 @@ import TripCard from "./components/TripCard/TripCard";
 
 // Import Types
 import { getMyTrips } from "../../services";
-import TopBar from "./components/TopBar/Topbar";
+import TopBar from "./components/TopBar/TopBar";
 import type { TripPlan } from "./types";
 
 const Dashboard: React.FC = () => {
@@ -24,17 +24,50 @@ const Dashboard: React.FC = () => {
     "all" | "upcoming" | "completed" | "ongoing"
   >("all");
 
-  useEffect(() => {
-    AOS.init({ duration: 800, once: true });
-    fetchTrips();
-  }, []);
+  const applyFilter = useCallback(
+    (
+      filterStatus: "all" | "upcoming" | "completed" | "ongoing",
+      tripsToFilter?: TripPlan[],
+    ) => {
+      const tripsData = tripsToFilter || trips;
+      setActiveFilter(filterStatus);
 
-  const fetchTrips = async () => {
+      if (filterStatus === "all") {
+        setFilteredTrips(tripsData);
+      } else {
+        setFilteredTrips(
+          tripsData.filter((trip) => trip.status === filterStatus),
+        );
+      }
+    },
+    [trips],
+  );
+
+  const fetchTrips = useCallback(async () => {
     try {
       setLoading(true);
       // Fetch all trips (without status filter to get all types)
       const results = await getMyTrips();
-      const tripsData = Array.isArray(results?.data) ? results.data : [];
+      const sourceTrips = Array.isArray(results?.data?.DT)
+        ? results.data.DT
+        : [];
+      const tripsData: TripPlan[] = sourceTrips.map((trip) => ({
+        id: String(trip.id),
+        title: trip.title,
+        dateRange: `${trip.startDate} - ${trip.endDate}`,
+        days: Math.max(
+          1,
+          Math.round(
+            (new Date(trip.endDate).getTime() -
+              new Date(trip.startDate).getTime()) /
+              (1000 * 60 * 60 * 24),
+          ),
+        ),
+        people: trip.numberOfPeople,
+        image: trip.images?.[0] || "",
+        status: "upcoming",
+        checklist: trip.checklist || [],
+      }));
       setTrips(tripsData);
       applyFilter("all", tripsData);
     } catch (error) {
@@ -44,23 +77,12 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [applyFilter]);
 
-  const applyFilter = (
-    filterStatus: "all" | "upcoming" | "completed" | "ongoing",
-    tripsToFilter?: TripPlan[],
-  ) => {
-    const tripsData = tripsToFilter || trips;
-    setActiveFilter(filterStatus);
-
-    if (filterStatus === "all") {
-      setFilteredTrips(tripsData);
-    } else {
-      setFilteredTrips(
-        tripsData.filter((trip) => trip.status === filterStatus),
-      );
-    }
-  };
+  useEffect(() => {
+    AOS.init({ duration: 800, once: true });
+    fetchTrips();
+  }, [fetchTrips]);
 
   const handleFilterClick = (
     status: "all" | "upcoming" | "completed" | "ongoing",

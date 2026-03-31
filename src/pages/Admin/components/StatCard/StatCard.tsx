@@ -1,6 +1,6 @@
-import React from 'react';
-import styles from './StatCard.module.scss';
 import * as Icons from "@phosphor-icons/react";
+import React from "react";
+import styles from "./StatCard.module.scss";
 
 interface StatCardProps {
   label: string;
@@ -12,16 +12,19 @@ interface StatCardProps {
   footerText?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ 
-  label, 
-  value, 
-  trend, 
-  trendUp, 
-  icon, 
-  colorClass, 
-  footerText 
+const StatCard: React.FC<StatCardProps> = ({
+  label,
+  value,
+  trend,
+  trendUp,
+  icon,
+  colorClass,
+  footerText,
 }) => {
-  const IconComponent = Icons[icon] as any;
+  const IconComponent = Icons[icon] as React.ComponentType<{
+    size?: number;
+    weight?: string;
+  }>;
 
   return (
     <div className={styles.statCard}>
@@ -35,12 +38,22 @@ const StatCard: React.FC<StatCardProps> = ({
         </div>
       </div>
       {trend && (
-        <div className={`${styles.statTrend} ${trendUp ? styles.textEmerald : styles.textAmber}`}>
-          {trendUp ? <Icons.TrendUp size={14} /> : <Icons.TrendDown size={14} />}
+        <div
+          className={`${styles.statTrend} ${trendUp ? styles.textEmerald : styles.textAmber}`}
+        >
+          {trendUp ? (
+            <Icons.TrendUp size={14} />
+          ) : (
+            <Icons.TrendDown size={14} />
+          )}
           <span>{trend}</span>
         </div>
       )}
-      {footerText && <p className={styles.statLabel} style={{ marginTop: '8px' }}>{footerText}</p>}
+      {footerText && (
+        <p className={styles.statLabel} style={{ marginTop: "8px" }}>
+          {footerText}
+        </p>
+      )}
     </div>
   );
 };

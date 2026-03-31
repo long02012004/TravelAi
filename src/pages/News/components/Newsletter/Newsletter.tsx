@@ -33,7 +33,7 @@ const Newsletter: React.FC = () => {
 
     try {
       const result = await subscribe(email);
-      if (result?.data) {
+      if (result) {
         toast.success("Cảm ơn bạn đã đăng ký! Kiểm tra email của bạn.");
         setEmail("");
       }

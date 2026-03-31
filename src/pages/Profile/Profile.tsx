@@ -2,7 +2,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { getUserProfile, updateUserProfile } from "../../services";
+import { getUserProfile } from "../../services";
 import styles from "./Profile.module.scss";
 import ProfileForm from "./components/ProfileForm/ProfileForm";
 import ProfileHeader from "./components/ProfileHeader/ProfileHeader";
@@ -49,8 +49,8 @@ const Profile: React.FC = () => {
       }
 
       const result = await getUserProfile(userId);
-      if (result?.data) {
-        setUserProfile(result.data);
+      if (result?.data?.DT) {
+        setUserProfile(result.data.DT);
       } else {
         // Use user data from localStorage if API fails
         setUserProfile({
@@ -65,25 +65,6 @@ const Profile: React.FC = () => {
       toast.error("Lỗi khi tải hồ sơ người dùng");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleProfileUpdate = async (updatedData: Partial<UserProfile>) => {
-    try {
-      const userId = userProfile?.id || localStorage.getItem("user");
-      if (!userId) {
-        toast.error("ID người dùng không hợp lệ");
-        return;
-      }
-
-      const result = await updateUserProfile(userId, updatedData);
-      if (result?.data) {
-        setUserProfile((prev) => ({ ...prev, ...updatedData }));
-        toast.success("Cập nhật thông tin thành công");
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error("Lỗi khi cập nhật hồ sơ");
     }
   };
 

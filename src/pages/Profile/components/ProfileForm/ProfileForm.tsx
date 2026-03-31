@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { useMutation } from "../../../../hooks/useApi";
-import { changePassword, updateUserProfile } from "../../../../services";
+import {
+  changePassword,
+  updateUserProfile,
+  type UpdateProfileRequest,
+  type UserData,
+} from "../../../../services";
 import styles from "./ProfileForm.module.scss";
 
 interface ProfileFormProps {
@@ -31,27 +36,27 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   const [confirmPassword, setConfirmPassword] = useState("");
 
   // Mutations
-  const { mutate: updateInfo, loading: isUpdatingInfo } = useMutation(
-    async (data) => {
-      const userId = JSON.parse(localStorage.getItem("user") || "{}").id;
-      if (!userId) {
-        toast.error("Vui lòng đăng nhập lại");
-        return null;
-      }
-      return updateUserProfile(userId, data);
-    },
-  );
+  const { mutate: updateInfo, loading: isUpdatingInfo } = useMutation<
+    UserData,
+    UpdateProfileRequest
+  >(async (data) => {
+    const userId = JSON.parse(localStorage.getItem("user") || "{}").id;
+    if (!userId) {
+      throw new Error("Vui lòng đăng nhập lại");
+    }
+    return await updateUserProfile(userId, data);
+  });
 
-  const { mutate: changePass, loading: isChangingPassword } = useMutation(
-    async (data) => {
-      const userId = JSON.parse(localStorage.getItem("user") || "{}").id;
-      if (!userId) {
-        toast.error("Vui lòng đăng nhập lại");
-        return null;
-      }
-      return changePassword(userId, data.oldPassword, data.newPassword);
-    },
-  );
+  const { mutate: changePass, loading: isChangingPassword } = useMutation<
+    { success: boolean },
+    { oldPassword: string; newPassword: string }
+  >(async (data) => {
+    const userId = JSON.parse(localStorage.getItem("user") || "{}").id;
+    if (!userId) {
+      throw new Error("Vui lòng đăng nhập lại");
+    }
+    return await changePassword(userId, data.oldPassword, data.newPassword);
+  });
 
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,13 +68,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 
     try {
       const result = await updateInfo({
-        fullName: fullName || undefined,
+        username: fullName || undefined,
         phone: phone || undefined,
-        address: address || undefined,
         bio: bio || undefined,
       });
 
-      if (result?.data) {
+      if (result) {
         toast.success("Cập nhật thông tin thành công!");
         onSuccess?.();
       }
@@ -102,7 +106,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         newPassword: newPassword,
       });
 
-      if (result?.data) {
+      if (result) {
         toast.success("Đổi mật khẩu thành công!");
         setCurrentPassword("");
         setNewPassword("");

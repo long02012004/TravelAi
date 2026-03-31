@@ -101,7 +101,7 @@ const Hero: React.FC = () => {
         rangeSeparator: " - ",
       },
       // Cập nhật state ngay khi người dùng chọn ngày
-      onChange: (selectedDates, dateStr) => {
+      onChange: (_selectedDates, dateStr) => {
         setDates(dateStr);
       },
     });

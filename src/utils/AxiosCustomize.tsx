@@ -68,7 +68,7 @@ interface BackendResponse<T = unknown> {
 NProgress.configure({ showSpinner: false, trickleSpeed: 100 });
 
 const instance = axios.create({
-  baseURL: "http://localhost:8081/",
+  baseURL: "http://localhost:8888/",
 });
 
 instance.interceptors.request.use(

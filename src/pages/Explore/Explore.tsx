@@ -26,17 +26,14 @@ const Explore: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const keyword = params.get("keyword") || "";
-    const dateRange = params.get("dateRange") || "";
-    const people = params.get("people") || "";
-
     if (keyword) {
       setSearchTerm(keyword);
-      fetchSearchResults(keyword, dateRange);
+      fetchSearchResults(keyword);
     }
   }, [location.search]);
 
   // Fetch search results from API
-  const fetchSearchResults = async (keyword: string, dateRange?: string) => {
+  const fetchSearchResults = async (keyword: string) => {
     try {
       setLoading(true);
       // Call globalSearch with keyword filter

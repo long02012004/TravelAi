@@ -17,10 +17,20 @@ export interface Place {
   description?: string;
   category: string;
   rating?: number;
-  reviews?: number;
+  reviewCount?: number;
   image?: string;
+  thumbnail?: string;
   images?: string[];
+  gallery?: string[];
+  distance?: string;
+  services?: {
+    hotels?: Place[];
+    restaurants?: Place[];
+    tours?: Place[];
+  };
   price?: number;
+  priceRange?: string;
+  visitTime?: string;
   openingHours?: string;
   contact?: string;
   website?: string;
@@ -32,6 +42,41 @@ export interface Place {
   province?: Province;
   createdAt?: string;
   updatedAt?: string;
+
+  // Extended fields from backend destination response
+  name?: string;
+  address?: string;
+  tips?: {
+    icon: string;
+    title: string;
+    content: string;
+  }[];
+  weather?: {
+    temp: number;
+    description: string;
+    icon: string;
+  };
+  travelTime?: string;
+  mapScreenshot?: string;
+  quickInfo?: {
+    id: number;
+    label: string;
+    value: string;
+  }[];
+  reviewsData?: {
+    average: number;
+    total: number;
+    breakdown: { stars: number; percentage: number }[];
+    list: {
+      user: string;
+      avatar: string;
+      rating: number;
+      date: string;
+      tag: string;
+      content: string;
+      images?: string[];
+    }[];
+  };
 }
 
 export interface Destination {
@@ -110,7 +155,7 @@ export const getPlacesByCategory = (
 
 // 4. Lấy chi tiết địa điểm
 export const getPlaceDetail = (
-  placeId: number,
+  placeId: number | string,
 ): Promise<AxiosResponse<BackendResponse<Place>>> => {
   return instance.get<BackendResponse<Place>>(`/api/places/${placeId}`);
 };

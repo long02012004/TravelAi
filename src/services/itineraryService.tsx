@@ -48,6 +48,7 @@ export interface GenerateTripRequest {
   endDate: string;
   numberOfDays: number;
   numberOfPeople: number;
+  peopleGroup?: string;
   interests: string[];
   budget: number;
   travelStyle: "adventure" | "relaxing" | "cultural" | "luxury" | "budget";

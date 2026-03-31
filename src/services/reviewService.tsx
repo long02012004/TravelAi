@@ -8,6 +8,10 @@ export interface Review {
   userId: string;
   userName: string;
   userAvatar?: string;
+  user?: string;
+  avatar?: string;
+  date?: string;
+  tag?: string;
   rating: number;
   title: string;
   content: string;
@@ -51,7 +55,7 @@ export interface UpdateReviewRequest {
 
 // 1. Lấy danh sách reviews cho một địa điểm
 export const getPlaceReviews = (
-  placeId: number,
+  placeId: number | string,
   skip = 0,
   limit = 10,
   sortBy = "recent",

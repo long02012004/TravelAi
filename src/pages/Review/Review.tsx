@@ -9,12 +9,14 @@ import {
   createPlaceReview,
   getPlaceReviews,
   uploadReviewPhotos,
+  type Review as ApiReview,
+  type CreateReviewRequest,
 } from "../../services";
 import StarRating from "./component/StarRating";
 import styles from "./Review.module.scss";
 
 // --- Interfaces ---
-interface Review {
+interface ReviewItem {
   id: number;
   userName: string;
   avatar: string;
@@ -25,6 +27,7 @@ interface Review {
 
 const Review: React.FC = () => {
   const { placeId } = useParams<{ placeId: string }>();
+  const placeIdNum = Number(placeId);
 
   // Khởi tạo AOS khi component mount
   useEffect(() => {
@@ -41,45 +44,53 @@ const Review: React.FC = () => {
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState<string>("");
   const [uploadedImages, setUploadedImages] = useState<(string | File)[]>([]);
-  const [recentReviews, setRecentReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [recentReviews, setRecentReviews] = useState<ReviewItem[]>([]);
 
   // Mutations
-  const { mutate: submitReview, loading: isSubmitting } = useMutation(
-    async (reviewData) => {
-      if (!placeId) {
-        toast.error("ID địa điểm không hợp lệ");
-        return null;
-      }
-      return createPlaceReview(placeId, reviewData);
-    },
-  );
+  const { mutate: submitReview, loading: isSubmitting } = useMutation<
+    ApiReview,
+    CreateReviewRequest
+  >(async (reviewData) => {
+    if (!placeIdNum) {
+      throw new Error("ID địa điểm không hợp lệ");
+    }
+    const response = await createPlaceReview(placeIdNum, reviewData);
+    return response;
+  });
 
-  const { mutate: uploadPhotos, loading: isUploading } = useMutation(
-    async (files: File[]) => {
-      if (files.length === 0) return null;
-      return uploadReviewPhotos(files);
-    },
-  );
+  const { mutate: uploadPhotos, loading: isUploading } = useMutation<
+    string[],
+    File[]
+  >(async (files) => {
+    if (files.length === 0) {
+      return {
+        data: {
+          DT: [],
+        },
+      } as any;
+    }
+    const response = await uploadReviewPhotos(files);
+    return response;
+  });
 
   const fetchReviews = async () => {
     try {
-      if (!placeId) return;
-      const result = await getPlaceReviews(placeId, 0, 3);
-      if (result?.data) {
-        // Map API response to Review interface
-        const reviews = Array.isArray(result.data)
-          ? result.data.map((r: any, idx: number) => ({
-              id: idx + 1,
-              userName: r.userName || r.authorName || "User",
-              avatar: r.avatar || `https://i.pravatar.cc/150?u=user${idx}`,
-              timeAgo: r.timeAgo || r.createdAt || "Gần đây",
-              rating: r.rating || 5,
-              comment: r.comment || r.content || "",
-            }))
-          : [];
-        setRecentReviews(reviews);
-      }
+      if (!placeIdNum) return;
+      const result = await getPlaceReviews(placeIdNum, 0, 3);
+      const payload = result?.data.DT || [];
+      // Map API response to Review interface
+      const reviews = Array.isArray(payload)
+        ? payload.map((r: any, idx: number) => ({
+            id: idx + 1,
+            userName: r.userName || r.authorName || "User",
+            avatar: r.avatar || `https://i.pravatar.cc/150?u=user${idx}`,
+            timeAgo: r.timeAgo || r.createdAt || "Gần đây",
+            rating: r.rating || 5,
+            comment: r.comment || r.content || "",
+          }))
+        : [];
+
+      setRecentReviews(reviews);
     } catch (error) {
       console.error("Error fetching reviews:", error);
     }
@@ -99,7 +110,7 @@ const Review: React.FC = () => {
     // Optionally upload immediately
     try {
       const uploadResult = await uploadPhotos(newImages);
-      if (uploadResult?.data) {
+      if (Array.isArray(uploadResult) && uploadResult.length > 0) {
         toast.success("Tải ảnh lên thành công");
       }
     } catch (error) {
@@ -128,21 +139,22 @@ const Review: React.FC = () => {
       // Upload photos if any
       if (filesToUpload.length > 0) {
         const uploadResult = await uploadPhotos(filesToUpload);
-        if (uploadResult?.data) {
-          photoUrls = Array.isArray(uploadResult.data) ? uploadResult.data : [];
+        if (uploadResult) {
+          photoUrls = Array.isArray(uploadResult) ? uploadResult : [];
         }
       }
 
       // Submit review with photo URLs
-      const reviewData = {
+      const reviewData: CreateReviewRequest = {
+        title: `Đánh giá ${rating} sao`,
+        content: comment,
         rating: rating,
-        comment: comment,
-        photos: photoUrls,
+        images: photoUrls,
       };
 
       const result = await submitReview(reviewData);
 
-      if (result?.data) {
+      if (result) {
         toast.success(
           "Cảm ơn bạn đã gửi đánh giá! Ý kiến của bạn đã được ghi nhận.",
         );

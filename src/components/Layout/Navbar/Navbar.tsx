@@ -1,47 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  Sparkle,
   CaretDown,
-  UserCircle,
   MapTrifold,
   SignOut,
+  Sparkle,
+  UserCircle,
 } from "phosphor-react";
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify"; // Đảm bảo đã import toast
-import styles from "./Navbar.module.scss";
 import { logo } from "../../../assets/images/img";
+import styles from "./Navbar.module.scss";
 
 const Navbar: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     const token = localStorage.getItem("token");
     return !!token;
   });
-  const [username, setUsername] = useState(() => {
+  const [username] = useState(() => {
     return localStorage.getItem("username") || "";
   });
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Kiểm tra trạng thái đăng nhập mỗi khi đường dẫn (location) thay đổi
-  // 2. Cập nhật state khi chuyển hướng trang
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUsername = localStorage.getItem("username") || "Người dùng";
-
-    const hasToken = !!token;
-
-    // Chỉ cập nhật nếu giá trị thực tế khác với giá trị trong State hiện tại
-    if (hasToken !== isLoggedIn) {
-      setIsLoggedIn(hasToken);
-    }
-
-    if (storedUsername !== username) {
-      setUsername(storedUsername);
-    }
-
-    // Lưu ý: Không đưa 'isLoggedIn' và 'username' vào mảng dependencies
-    // để tránh tình trạng "cascading renders" (render thác đổ).
-  }, [location]);
   const isActive = (path: string) => location.pathname === path;
 
   const handleLogOut = (e: React.MouseEvent<HTMLAnchorElement>) => {
