@@ -1,10 +1,13 @@
+import { Star, StarHalf } from "@phosphor-icons/react";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { Star, StarHalf } from "@phosphor-icons/react";
-import styles from "./ReviewsTab.module.scss";
-import type { Destination } from "../../DestinationDetail";
 import { useMutation } from "../../../../hooks/useApi";
-import { createPlaceReview, type CreateReviewRequest } from "../../../../services";
+import {
+  createPlaceReview,
+  type CreateReviewRequest,
+} from "../../../../services";
+import type { Destination } from "../../DestinationDetail";
+import styles from "./ReviewsTab.module.scss";
 
 interface ReviewsTabProps {
   reviews: Destination["reviewsData"];
@@ -12,7 +15,11 @@ interface ReviewsTabProps {
   onReviewSubmitted?: () => void;
 }
 
-const ReviewsTab: React.FC<ReviewsTabProps> = ({ reviews, placeId, onReviewSubmitted }) => {
+const ReviewsTab: React.FC<ReviewsTabProps> = ({
+  reviews,
+  placeId,
+  onReviewSubmitted,
+}) => {
   const [showForm, setShowForm] = useState(false);
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState("");
@@ -29,7 +36,7 @@ const ReviewsTab: React.FC<ReviewsTabProps> = ({ reviews, placeId, onReviewSubmi
           DT: response.data.DT,
         },
       };
-    }
+    },
   );
 
   const handleSubmitReview = async () => {
@@ -68,18 +75,23 @@ const ReviewsTab: React.FC<ReviewsTabProps> = ({ reviews, placeId, onReviewSubmi
       <div className={styles.reviewBtn}>
         <span>Đánh giá từ cộng đồng</span>
 
-        <button
-          className={styles.btn}
-          onClick={() => setShowForm(!showForm)}
-        >
+        <button className={styles.btn} onClick={() => setShowForm(!showForm)}>
           Đánh giá ngay
         </button>
       </div>
 
       {showForm && (
-        <div className={styles.reviewForm} style={{ marginBottom: "30px", padding: "20px", backgroundColor: "#f5f5f5", borderRadius: "8px" }}>
+        <div
+          className={styles.reviewForm}
+          style={{
+            marginBottom: "30px",
+            padding: "20px",
+            backgroundColor: "#f5f5f5",
+            borderRadius: "8px",
+          }}
+        >
           <h4>Chia sẻ trải nghiệm của bạn</h4>
-          
+
           <div style={{ marginBottom: "15px" }}>
             <label>Đánh giá sao: </label>
             <div style={{ display: "flex", gap: "5px", marginTop: "8px" }}>

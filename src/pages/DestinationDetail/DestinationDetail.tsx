@@ -287,7 +287,9 @@ const DestinationDetail: React.FC = () => {
         <div className={styles.destLeft}>
           {activeTab === "overview" && <OverviewTab data={data} />}
           {activeTab === "services" && <ServicesTab services={data.services} />}
-          {activeTab === "reviews" && <ReviewsTab reviews={data.reviewsData} placeId={data.id || 1} />}
+          {activeTab === "reviews" && (
+            <ReviewsTab reviews={data.reviewsData} placeId={data.id || 1} />
+          )}
           {activeTab === "tips" && <TipsTab tips={data.travelTips} />}
         </div>
 
