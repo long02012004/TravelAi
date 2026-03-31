@@ -1,9 +1,18 @@
-import React, { useState, useEffect } from "react";
+import { Camera, PaperPlaneTilt, X } from "@phosphor-icons/react";
+import AOS from "aos";
+import "aos/dist/aos.css";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useMutation } from "../../hooks/useApi";
+import {
+  createPlaceReview,
+  getPlaceReviews,
+  uploadReviewPhotos,
+} from "../../services";
 import StarRating from "./component/StarRating";
 import styles from "./Review.module.scss";
-import { X, Camera, PaperPlaneTilt } from "@phosphor-icons/react";
-import AOS from "aos";
-import "aos/dist/aos.css"; // Đảm bảo đã import CSS của AOS
+
 // --- Interfaces ---
 interface Review {
   id: number;
@@ -15,65 +24,139 @@ interface Review {
 }
 
 const Review: React.FC = () => {
+  const { placeId } = useParams<{ placeId: string }>();
+
   // Khởi tạo AOS khi component mount
   useEffect(() => {
     AOS.init({
       duration: 1000,
-      once: true, // Hiệu ứng chỉ chạy 1 lần khi scroll qua
+      once: true,
     });
-  }, []);
+    if (placeId) {
+      fetchReviews();
+    }
+  }, [placeId]);
+
   // --- States ---
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState<string>("");
-  const [uploadedImages, setUploadedImages] = useState<string[]>([
-    "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&q=80",
-    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80",
-    "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&q=80",
-  ]);
+  const [uploadedImages, setUploadedImages] = useState<(string | File)[]>([]);
+  const [recentReviews, setRecentReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Dữ liệu mẫu cho Recent Reviews
-  const recentReviews: Review[] = [
-    {
-      id: 1,
-      userName: "Linh Nguyễn",
-      avatar: "https://i.pravatar.cc/150?u=user1",
-      timeAgo: "2 ngày trước",
-      rating: 5,
-      comment:
-        "Chuyến đi thật tuyệt vời! Lịch trình rất hợp lý, tôi không cảm thấy quá mệt mỏi nhưng vẫn tham quan được nhiều địa điểm đẹp.",
+  // Mutations
+  const { mutate: submitReview, loading: isSubmitting } = useMutation(
+    async (reviewData) => {
+      if (!placeId) {
+        toast.error("ID địa điểm không hợp lệ");
+        return null;
+      }
+      return createPlaceReview(placeId, reviewData);
     },
-    {
-      id: 2,
-      userName: "Minh Trần",
-      avatar: "https://i.pravatar.cc/150?u=user2",
-      timeAgo: "1 tuần trước",
-      rating: 4,
-      comment:
-        "Giá cả khá cạnh tranh so với mặt bằng chung. Hướng dẫn viên rất nhiệt tình và chu đáo với khách hàng.",
-    },
-    {
-      id: 3,
-      userName: "Minh Trần",
-      avatar: "https://i.pravatar.cc/150?u=user2",
-      timeAgo: "1 tuần trước",
-      rating: 4,
-      comment:
-        "Giá cả khá cạnh tranh so với mặt bằng chung. Hướng dẫn viên rất nhiệt tình và chu đáo với khách hàng.",
-    },
-  ];
+  );
 
-  // --- Handlers ---
+  const { mutate: uploadPhotos, loading: isUploading } = useMutation(
+    async (files: File[]) => {
+      if (files.length === 0) return null;
+      return uploadReviewPhotos(files);
+    },
+  );
+
+  const fetchReviews = async () => {
+    try {
+      if (!placeId) return;
+      const result = await getPlaceReviews(placeId, 0, 3);
+      if (result?.data) {
+        // Map API response to Review interface
+        const reviews = Array.isArray(result.data)
+          ? result.data.map((r: any, idx: number) => ({
+              id: idx + 1,
+              userName: r.userName || r.authorName || "User",
+              avatar: r.avatar || `https://i.pravatar.cc/150?u=user${idx}`,
+              timeAgo: r.timeAgo || r.createdAt || "Gần đây",
+              rating: r.rating || 5,
+              comment: r.comment || r.content || "",
+            }))
+          : [];
+        setRecentReviews(reviews);
+      }
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    }
+  };
+
   const handleRemoveImage = (index: number) => {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
+  const handleImageUpload = async (files: FileList | null) => {
+    if (!files) return;
+
+    // Add to uploaded images (mix of File and preview URLs)
+    const newImages = Array.from(files);
+    setUploadedImages((prev) => [...prev, ...newImages]);
+
+    // Optionally upload immediately
+    try {
+      const uploadResult = await uploadPhotos(newImages);
+      if (uploadResult?.data) {
+        toast.success("Tải ảnh lên thành công");
+      }
+    } catch (error) {
+      toast.error("Lỗi khi tải ảnh lên");
+    }
+  };
+
+  const handleSubmit = async () => {
     if (rating === 0) {
-      alert("Vui lòng chọn mức độ đánh giá sao!");
+      toast.error("Vui lòng chọn mức độ đánh giá sao!");
       return;
     }
-    console.log("Submit Review:", { rating, comment, images: uploadedImages });
-    alert("Cảm ơn bạn đã gửi đánh giá! Ý kiến của bạn đã được ghi nhận.");
+
+    if (!comment.trim()) {
+      toast.error("Vui lòng viết một phản hồi");
+      return;
+    }
+
+    try {
+      // Collect file uploads to send with review
+      const filesToUpload = uploadedImages.filter(
+        (img) => img instanceof File,
+      ) as File[];
+      let photoUrls: string[] = [];
+
+      // Upload photos if any
+      if (filesToUpload.length > 0) {
+        const uploadResult = await uploadPhotos(filesToUpload);
+        if (uploadResult?.data) {
+          photoUrls = Array.isArray(uploadResult.data) ? uploadResult.data : [];
+        }
+      }
+
+      // Submit review with photo URLs
+      const reviewData = {
+        rating: rating,
+        comment: comment,
+        photos: photoUrls,
+      };
+
+      const result = await submitReview(reviewData);
+
+      if (result?.data) {
+        toast.success(
+          "Cảm ơn bạn đã gửi đánh giá! Ý kiến của bạn đã được ghi nhận.",
+        );
+        // Reset form
+        setRating(0);
+        setComment("");
+        setUploadedImages([]);
+        // Refresh reviews
+        fetchReviews();
+      }
+    } catch (error) {
+      toast.error("Lỗi khi gửi đánh giá");
+      console.error(error);
+    }
   };
 
   return (
@@ -142,6 +225,7 @@ const Review: React.FC = () => {
               placeholder="Hãy cho chúng tôi biết điều gì bạn thích hoặc cần cải thiện..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
+              disabled={isSubmitting || isUploading}
             />
           </div>
 
@@ -152,36 +236,58 @@ const Review: React.FC = () => {
               <label className={styles.uploadBtn}>
                 <Camera size={24} weight="bold" />
                 <span>Tải ảnh lên</span>
-                <input type="file" hidden multiple accept="image/*" />
+                <input
+                  type="file"
+                  hidden
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e.target.files)}
+                  disabled={isUploading}
+                />
               </label>
 
-              {uploadedImages.map((img, index) => (
-                <div
-                  key={index}
-                  className={styles.uploadThumb}
-                  data-aos="zoom-in"
-                >
-                  <img src={img} alt={`Thumb ${index}`} />
-                  <button
-                    className={styles.btnRemoveImg}
-                    onClick={() => handleRemoveImage(index)}
+              {uploadedImages.map((img, index) => {
+                const imageUrl =
+                  typeof img === "string" ? img : URL.createObjectURL(img);
+
+                return (
+                  <div
+                    key={index}
+                    className={styles.uploadThumb}
+                    data-aos="zoom-in"
                   >
-                    <div className={styles.btnIcon}>
-                      <X size={10} weight="bold" />
-                    </div>
-                  </button>
-                </div>
-              ))}
+                    <img src={imageUrl} alt={`Thumb ${index}`} />
+                    <button
+                      className={styles.btnRemoveImg}
+                      onClick={() => handleRemoveImage(index)}
+                      disabled={isUploading}
+                      type="button"
+                    >
+                      <div className={styles.btnIcon}>
+                        <X size={10} weight="bold" />
+                      </div>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           <div className={styles.formActions}>
-            <button className={styles.btnSubmitReview} onClick={handleSubmit}>
-              <PaperPlaneTilt size={16} weight="bold" /> Gửi đánh giá
+            <button
+              className={styles.btnSubmitReview}
+              onClick={handleSubmit}
+              disabled={isSubmitting || isUploading}
+              type="button"
+            >
+              <PaperPlaneTilt size={16} weight="bold" />{" "}
+              {isSubmitting || isUploading ? "Đang gửi..." : "Gửi đánh giá"}
             </button>
             <button
               className={styles.btnCancelReview}
               onClick={() => window.history.back()}
+              disabled={isSubmitting || isUploading}
+              type="button"
             >
               Hủy bỏ
             </button>

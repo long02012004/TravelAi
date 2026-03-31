@@ -1,18 +1,22 @@
-import React, { useState } from "react";
+import axios from "axios";
 import {
-  User,
   EnvelopeSimple,
-  LockKey,
   Eye,
   EyeSlash,
   FacebookLogo,
   GoogleLogo,
+  LockKey,
+  User,
 } from "phosphor-react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useMutation } from "../../../hooks/useApi";
+import {
+  postSignUp,
+  type RegisterRequest,
+} from "../../../services/userService";
 import styles from "./Register.module.scss";
-import { useNavigate } from "react-router-dom"; // Sửa lại từ "react-router" thành "react-router-dom"
-import { postSignUp } from "../../../services/userService"; // Đường dẫn file service của bạn
-import axios from "axios";
 
 interface Props {
   onToggle: () => void;
@@ -28,9 +32,13 @@ const Register: React.FC<Props> = ({ onToggle }) => {
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [terms, setTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  // Dùng mutation hook
+  const { mutate: signup, loading: isLoading } = useMutation(
+    (request: RegisterRequest) => postSignUp(request),
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -61,30 +69,36 @@ const Register: React.FC<Props> = ({ onToggle }) => {
       return toast.error("Mật khẩu xác nhận không khớp!");
     if (!terms) return toast.warn("Bạn cần đồng ý với điều khoản!");
 
-    // --- 2. Gọi API MockAPI ---
-    setIsLoading(true);
+    // --- 2. Gọi API ---
     try {
-      // Gọi service (File axios-customize đã bọc sẵn EC, EM, DT)
-      const res = await postSignUp(cleanName, cleanEmail, formData.pass);
+      const result = await signup({
+        username: cleanName,
+        email: cleanEmail,
+        password: formData.pass,
+      });
 
-      if (res.data && res.data.EC === 0) {
+      if (result) {
+        // Save token if provided
+        localStorage.setItem("accessToken", result.accessToken);
+        if (result.refreshToken) {
+          localStorage.setItem("refreshToken", result.refreshToken);
+        }
+        localStorage.setItem("user", JSON.stringify(result.user));
+
         toast.success("Đăng ký thành công! 🎉");
         setTimeout(() => {
           navigate("/auth?mode=login");
         }, 1500);
       } else {
-        toast.error(res.data.EM || "Đăng ký thất bại!");
+        toast.error("Đăng ký thất bại!");
       }
     } catch (error: unknown) {
-      // Xử lý lỗi mà không dùng 'any'
       if (axios.isAxiosError(error)) {
         const serverError = error.response?.data as { EM?: string };
-        toast.error(serverError?.EM || "Lỗi kết nối server MockAPI");
+        toast.error(serverError?.EM || "Lỗi kết nối server");
       } else {
         toast.error("Đã xảy ra lỗi không xác định");
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
