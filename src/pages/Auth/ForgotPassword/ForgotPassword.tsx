@@ -1,20 +1,25 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  EnvelopeSimple,
   ArrowBendUpLeft,
-  PaperPlaneTilt,
-  ShieldCheck,
-  Lock,
   ArrowLeft,
   CheckCircle,
+  EnvelopeSimple,
   Eye,
   EyeSlash,
+  Lock,
+  PaperPlaneTilt,
+  ShieldCheck,
 } from "phosphor-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "react-toastify"; // Đảm bảo bạn đã cài react-toastify
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useMutation } from "../../../hooks/useApi";
+import {
+  sendOTP,
+  updatePasswordByEmail,
+  verifyEmail,
+} from "../../../services/userService";
 import styles from "./ForgotPassword.module.scss";
-import { updatePasswordByEmail } from "../../../services/userService";
 
 type Step = "email" | "otp" | "reset" | "success";
 
@@ -25,10 +30,23 @@ const ForgotPassword: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Mutation hooks
+  const { mutate: sendOtpEmail, loading: sendingOtp } = useMutation(
+    (email: string) => sendOTP(email),
+  );
+
+  const { mutate: verifyOtpCode, loading: verifyingOtp } = useMutation(
+    (data: { email: string; otp: string }) => verifyEmail(data.email, data.otp),
+  );
+
+  const { mutate: resetPassword, loading: resettingPassword } = useMutation(
+    (data: { email: string; password: string }) =>
+      updatePasswordByEmail(data.email, data.password),
+  );
 
   useEffect(() => {
     if (step === "otp") {
@@ -44,12 +62,17 @@ const ForgotPassword: React.FC = () => {
   };
 
   // 1. Xử lý gửi Email (Bước 1)
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return toast.error("Vui lòng nhập email!");
 
-    setStep("otp");
-    toast.info("Mã OTP đã được gửi! (Sử dụng mã: 123456 để test)");
+    const result = await sendOtpEmail(email);
+    if (result) {
+      setStep("otp");
+      toast.success("Mã OTP đã được gửi tới email của bạn!");
+    } else {
+      toast.error("Không thể gửi OTP. Vui lòng thử lại!");
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -70,19 +93,24 @@ const ForgotPassword: React.FC = () => {
   };
 
   // 2. Xử lý xác nhận mã OTP (Bước 2)
-  const handleOtpSubmit = (e: React.FormEvent) => {
+  const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const fullOtp = otp.join("");
 
-    if (fullOtp === "123456") {
+    if (!fullOtp || fullOtp.length !== 6) {
+      return toast.error("Vui lòng nhập đầy đủ mã OTP!");
+    }
+
+    const result = await verifyOtpCode({ email, otp: fullOtp });
+    if (result && result.success) {
       setStep("reset");
-      toast.success("Xác minh danh tính thành công!");
+      toast.success("Xác minh mã OTP thành công!");
     } else {
-      toast.error("Mã OTP không đúng! (Gợi ý: 123456)");
+      toast.error("Mã OTP không đúng hoặc đã hết hạn!");
     }
   };
 
-  // 3. Xử lý cập nhật mật khẩu mới (Bước 3 - Cập nhật db.json)
+  // 3. Xử lý cập nhật mật khẩu mới (Bước 3)
   const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -95,27 +123,22 @@ const ForgotPassword: React.FC = () => {
     }
 
     try {
-      setIsLoading(true);
-      // Gọi hàm cập nhật mật khẩu xuống JSON Server
-      const res = await updatePasswordByEmail(email, newPassword);
-
-      if (res.data && res.data.EC === 0) {
+      const result = await resetPassword({ email, password: newPassword });
+      if (result) {
         setStep("success");
         toast.success("Cập nhật mật khẩu thành công!");
+        setTimeout(() => {
+          navigate("/auth?mode=login");
+        }, 2000);
       } else {
-        toast.error(res.data.EM || "Có lỗi xảy ra, vui lòng thử lại!");
+        toast.error("Có lỗi xảy ra, vui lòng thử lại!");
       }
     } catch (error: unknown) {
-      // Xử lý lỗi chuẩn TypeScript (Tránh lỗi 'error' is of type 'unknown')
       let errorMessage = "Lỗi kết nối Server!";
-
       if (error instanceof Error) {
         errorMessage = error.message;
       }
-
       toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -198,8 +221,12 @@ const ForgotPassword: React.FC = () => {
                         />
                       </div>
                     </div>
-                    <button type="submit" className={styles.btnSubmit}>
-                      Gửi mã xác nhận
+                    <button
+                      type="submit"
+                      className={styles.btnSubmit}
+                      disabled={sendingOtp}
+                    >
+                      {sendingOtp ? "Đang gửi..." : "Gửi mã xác nhận"}
                     </button>
                   </form>
                   <div className={styles.authFooterText}>
@@ -245,8 +272,12 @@ const ForgotPassword: React.FC = () => {
                         />
                       ))}
                     </div>
-                    <button type="submit" className={styles.btnSubmit}>
-                      Xác minh ngay
+                    <button
+                      type="submit"
+                      className={styles.btnSubmit}
+                      disabled={verifyingOtp}
+                    >
+                      {verifyingOtp ? "Đang xác minh..." : "Xác minh ngay"}
                     </button>
                   </form>
                   <div className={styles.authFooterText}>
@@ -278,7 +309,7 @@ const ForgotPassword: React.FC = () => {
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           required
-                          disabled={isLoading}
+                          disabled={resettingPassword}
                         />
                         <span
                           className={styles.eyeIcon}
@@ -302,16 +333,18 @@ const ForgotPassword: React.FC = () => {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           required
-                          disabled={isLoading}
+                          disabled={resettingPassword}
                         />
                       </div>
                     </div>
                     <button
                       type="submit"
                       className={styles.btnSubmit}
-                      disabled={isLoading}
+                      disabled={resettingPassword}
                     >
-                      {isLoading ? "Đang xử lý..." : "Cập nhật mật khẩu"}
+                      {resettingPassword
+                        ? "Đang xử lý..."
+                        : "Cập nhật mật khẩu"}
                     </button>
                   </form>
                 </motion.div>

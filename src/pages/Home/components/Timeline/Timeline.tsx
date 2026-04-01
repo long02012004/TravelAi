@@ -1,10 +1,9 @@
-import React from "react";
 import {
-  CalendarBlank,
-  MapPin,
-  ForkKnife,
   Bed,
+  CalendarBlank,
   CheckCircle,
+  ForkKnife,
+  MapPin,
 } from "phosphor-react";
 import styles from "../../Home.module.scss"; // Tạm thời dùng chung file styles cũ của bạn
 

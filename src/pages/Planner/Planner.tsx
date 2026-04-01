@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import styles from "./Planner.module.scss";
 
-import StepProgressBar from "./components/StepProgressBar/StepProgressBar";
+import { useMutation } from "../../hooks/useApi";
+import { generateItinerary } from "../../services";
 import InterestItem from "./components/InterestItem/InterestItem";
-import type { PlannerFormData, InterestOption } from "./types";
+import StepProgressBar from "./components/StepProgressBar/StepProgressBar";
+import type { InterestOption, PlannerFormData } from "./types";
 
 const INTERESTS: InterestOption[] = [
   { id: "Ẩm thực", icon: "ph-fill ph-fork-knife", color: "#f97316" },
@@ -16,6 +20,7 @@ const INTERESTS: InterestOption[] = [
 ];
 
 const Planner: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<PlannerFormData>({
     destination: "",
     travelDate: "",
@@ -23,6 +28,25 @@ const Planner: React.FC = () => {
     budget: "Tiết kiệm (Dưới 5 triệu)",
     peopleGroup: "Gia đình / Nhóm bạn",
   });
+
+  const { mutate: generatePlan, loading: isGenerating } = useMutation(
+    async (data: PlannerFormData) => {
+      const budgetNumber =
+        Number(data.budget.toString().replace(/[\D]/g, "")) || 0;
+      const response = await generateItinerary({
+        destination: data.destination,
+        interests: data.interests,
+        budget: budgetNumber,
+        peopleGroup: data.peopleGroup,
+        startDate: data.travelDate,
+        endDate: data.travelDate,
+        numberOfDays: 1,
+        numberOfPeople: 1,
+        travelStyle: "budget",
+      });
+      return response;
+    },
+  );
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
@@ -37,6 +61,39 @@ const Planner: React.FC = () => {
           ? [...prev.interests, id]
           : prev.interests,
     }));
+  };
+
+  const handleGenerateItinerary = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.destination.trim()) {
+      toast.error("Vui lòng chọn điểm đến");
+      return;
+    }
+
+    if (!formData.travelDate.trim()) {
+      toast.error("Vui lòng chọn ngày đi");
+      return;
+    }
+
+    if (formData.interests.length === 0) {
+      toast.error("Vui lòng chọn ít nhất một sở thích");
+      return;
+    }
+
+    try {
+      const result = await generatePlan(formData);
+      if (result) {
+        toast.success("Lập kế hoạch thành công! Đang chuyển hướng...");
+        // Navigate to itinerary detail page with generated plan
+        setTimeout(() => {
+          navigate("/planner/results", { state: result });
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error generating itinerary:", error);
+      toast.error("Lỗi khi lập kế hoạch. Vui lòng thử lại!");
+    }
   };
 
   return (
@@ -63,11 +120,13 @@ const Planner: React.FC = () => {
               <label>ĐIỂM ĐẾN</label>
               <div className={styles.inputWrapper}>
                 <i className="ph-duotone ph-map-pin"></i>
-                <input 
-                  type="text" 
-                  placeholder="Bạn muốn đi đâu?" 
-                  value={formData.destination} 
-                  onChange={(e) => setFormData({...formData, destination: e.target.value})}
+                <input
+                  type="text"
+                  placeholder="Bạn muốn đi đâu?"
+                  value={formData.destination}
+                  onChange={(e) =>
+                    setFormData({ ...formData, destination: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -75,7 +134,15 @@ const Planner: React.FC = () => {
               <label>THỜI GIAN</label>
               <div className={styles.inputWrapper}>
                 <i className="ph-duotone ph-calendar-blank"></i>
-                <input type="text" placeholder="Chọn ngày" id="plan-dates" />
+                <input
+                  type="text"
+                  placeholder="Chọn ngày"
+                  id="plan-dates"
+                  value={formData.travelDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, travelDate: e.target.value })
+                  }
+                />
               </div>
             </div>
           </div>
@@ -85,7 +152,9 @@ const Planner: React.FC = () => {
           <h3 className={styles.sectionTitle}>
             <i className="ph-fill ph-heart"></i> Sở thích cá nhân
           </h3>
-          <p className={styles.infoText}>Chọn tối đa 4 phong cách du lịch bạn mong muốn trải nghiệm nhất:</p>
+          <p className={styles.infoText}>
+            Chọn tối đa 4 phong cách du lịch bạn mong muốn trải nghiệm nhất:
+          </p>
           <div className={styles.interestGrid}>
             {INTERESTS.map((item) => (
               <InterestItem
@@ -106,12 +175,18 @@ const Planner: React.FC = () => {
               <i className="ph-fill ph-money"></i> Ngân sách
             </label>
             <div className={styles.selectWrapper}>
-                <select className={styles.select}>
+              <select
+                className={styles.select}
+                value={formData.budget}
+                onChange={(e) =>
+                  setFormData({ ...formData, budget: e.target.value })
+                }
+              >
                 <option>Tiết kiệm (Dưới 5 triệu)</option>
                 <option>Tiêu chuẩn (5 - 15 triệu)</option>
                 <option>Cao cấp (Trên 15 triệu)</option>
-                </select>
-                <i className="ph-bold ph-caret-down"></i>
+              </select>
+              <i className="ph-bold ph-caret-down"></i>
             </div>
           </div>
           <div className={styles.inputGroup}>
@@ -119,21 +194,36 @@ const Planner: React.FC = () => {
               <i className="ph-fill ph-users"></i> Số Người
             </label>
             <div className={styles.selectWrapper}>
-                <select className={styles.select}>
+              <select
+                className={styles.select}
+                value={formData.peopleGroup}
+                onChange={(e) =>
+                  setFormData({ ...formData, peopleGroup: e.target.value })
+                }
+              >
                 <option>Gia định / Nhóm bạn</option>
                 <option>Cặp đôi</option>
                 <option>Đi một mình</option>
-                </select>
-                <i className="ph-bold ph-caret-down"></i>
+              </select>
+              <i className="ph-bold ph-caret-down"></i>
             </div>
           </div>
         </div>
 
         <div className={styles.submitWrapper}>
-          <button className={styles.btnSubmit}>
-            <i className="ph-bold ph-lightning"></i> Tối ưu hóa lộ trình AI
+          <button
+            className={styles.btnSubmit}
+            onClick={handleGenerateItinerary}
+            disabled={isGenerating}
+          >
+            <i className="ph-bold ph-lightning"></i>{" "}
+            {isGenerating ? "Đang lập kế hoạch..." : "Tối ưu hóa lộ trình AI"}
           </button>
-          <span className={styles.footerNote}>Mất khoảng 5-10 giây để xử lý dữ liệu thông minh</span>
+          <span className={styles.footerNote}>
+            {isGenerating
+              ? "Vui lòng chờ trong khi AI xử lý..."
+              : "Mất khoảng 5-10 giây để xử lý dữ liệu thông minh"}
+          </span>
         </div>
       </main>
 
@@ -150,7 +240,7 @@ const Planner: React.FC = () => {
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
           ></iframe>
-          
+
           <div className={styles.mapInfoBox}>
             <div className={styles.infoTop}>
               <h4>{formData.destination || "Việt Nam"}</h4>

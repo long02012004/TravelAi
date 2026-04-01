@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import {
-  RocketLaunch,
+  CalendarBlank,
   Compass,
   MapPin,
-  CalendarBlank,
-  Users,
+  RocketLaunch,
   Sparkle,
+  Users,
 } from "phosphor-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css"; // Đảm bảo đã import CSS của thư viện
@@ -101,7 +101,7 @@ const Hero: React.FC = () => {
         rangeSeparator: " - ",
       },
       // Cập nhật state ngay khi người dùng chọn ngày
-      onChange: (selectedDates, dateStr) => {
+      onChange: (_selectedDates, dateStr) => {
         setDates(dateStr);
       },
     });
@@ -123,17 +123,14 @@ const Hero: React.FC = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 1. Đóng gói dữ liệu vào một Object
-    const tripData = {
-      destination: dest,
-      dateRange: dates,
-      totalGuests: guests,
-      // Bạn có thể thêm các thông tin ẩn khác ở đây
-      searchAt: new Date().toISOString(),
-    };
+    // Build URL search params from hero form inputs
+    const params = new URLSearchParams();
+    if (dest) params.append("keyword", dest);
+    if (dates) params.append("dateRange", dates);
+    if (guests) params.append("people", guests);
 
-    // 2. Truyền đi thông qua tham số thứ 2 của navigate
-    navigate("/planner", { state: tripData });
+    // Navigate to explore page with search filters applied
+    navigate(`/explore?${params.toString()}`);
   };
 
   return (

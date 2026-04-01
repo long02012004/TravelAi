@@ -1,4 +1,5 @@
 import type { AxiosResponse } from "axios";
+import type { BackendResponse } from "../types";
 import instance from "../utils/AxiosCustomize";
 
 // --- Interfaces ---
@@ -13,23 +14,25 @@ export interface HighlightItem {
   type: string;
 }
 
-export interface BackendResponse<T = unknown> {
-  EC: number;
-  EM: string;
-  DT: T;
-}
-
 // Lấy danh sách địa điểm nổi bật
-export const getHighlightLocations = (): Promise<AxiosResponse<BackendResponse<HighlightItem[]>>> => {
+export const getHighlightLocations = (): Promise<
+  AxiosResponse<BackendResponse<HighlightItem[]>>
+> => {
   return instance.get<BackendResponse<HighlightItem[]>>("/highlight_locations");
 };
 
 // Lấy danh sách khách sạn nổi bật
-export const getHighlightHotels = (): Promise<AxiosResponse<BackendResponse<HighlightItem[]>>> => {
+export const getHighlightHotels = (): Promise<
+  AxiosResponse<BackendResponse<HighlightItem[]>>
+> => {
   return instance.get<BackendResponse<HighlightItem[]>>("/highlight_hotels");
 };
 
 // Lấy danh sách nhà hàng nổi bật
-export const getHighlightRestaurants = (): Promise<AxiosResponse<BackendResponse<HighlightItem[]>>> => {
-  return instance.get<BackendResponse<HighlightItem[]>>("/highlight_restaurants");
+export const getHighlightRestaurants = (): Promise<
+  AxiosResponse<BackendResponse<HighlightItem[]>>
+> => {
+  return instance.get<BackendResponse<HighlightItem[]>>(
+    "/highlight_restaurants",
+  );
 };
