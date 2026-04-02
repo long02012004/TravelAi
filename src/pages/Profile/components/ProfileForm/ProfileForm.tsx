@@ -1,44 +1,165 @@
-import React from 'react';
-import styles from './ProfileForm.module.scss';
+import React, { useState } from "react";
+import { toast } from "react-toastify";
+import { useMutation } from "../../../../hooks/useApi";
+import {
+  changePassword,
+  updateUserProfile,
+  type UpdateProfileRequest,
+  type UserData,
+} from "../../../../services";
+import styles from "./ProfileForm.module.scss";
 
 interface ProfileFormProps {
   title: string;
-  mode: 'info' | 'password';
-  profile?: ProfileData;
+  mode: "info" | "password";
+  onSuccess?: () => void;
 }
 
-import type { ProfileData } from "../../../../services/profileService";
-
-const ProfileForm: React.FC<ProfileFormProps> = ({ title, mode, profile }) => {
+const ProfileForm: React.FC<ProfileFormProps> = ({
+  title,
+  mode,
+  onSuccess,
+}) => {
   const [showCurrent, setShowCurrent] = React.useState(false);
   const [showNew, setShowNew] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Info form state
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [bio, setBio] = useState("");
+
+  // Password form state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Mutations
+  const { mutate: updateInfo, loading: isUpdatingInfo } = useMutation<
+    UserData,
+    UpdateProfileRequest
+  >(async (data) => {
+    const userId = JSON.parse(localStorage.getItem("user") || "{}").id;
+    if (!userId) {
+      throw new Error("Vui lòng đăng nhập lại");
+    }
+    return await updateUserProfile(userId, data);
+  });
+
+  const { mutate: changePass, loading: isChangingPassword } = useMutation<
+    { success: boolean },
+    { oldPassword: string; newPassword: string }
+  >(async (data) => {
+    const userId = JSON.parse(localStorage.getItem("user") || "{}").id;
+    if (!userId) {
+      throw new Error("Vui lòng đăng nhập lại");
+    }
+    return await changePassword(userId, data.oldPassword, data.newPassword);
+  });
+
+  const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(`Submitting ${mode} form...`);
+
+    if (!fullName.trim() && !phone && !address && !bio) {
+      toast.error("Vui lòng nhập ít nhất một thông tin");
+      return;
+    }
+
+    try {
+      const result = await updateInfo({
+        username: fullName || undefined,
+        phone: phone || undefined,
+        bio: bio || undefined,
+      });
+
+      if (result) {
+        toast.success("Cập nhật thông tin thành công!");
+        onSuccess?.();
+      }
+    } catch (error) {
+      toast.error("Lỗi khi cập nhật thông tin");
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Vui lòng điền tất cả các trường mật khẩu");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Mật khẩu mới không khớp");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+      return;
+    }
+
+    try {
+      const result = await changePass({
+        oldPassword: currentPassword,
+        newPassword: newPassword,
+      });
+
+      if (result) {
+        toast.success("Đổi mật khẩu thành công!");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        onSuccess?.();
+      }
+    } catch (error) {
+      toast.error("Mật khẩu hiện tại không chính xác");
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    if (mode === "info") {
+      handleInfoSubmit(e);
+    } else {
+      handlePasswordSubmit(e);
+    }
   };
 
   return (
     <div className={styles.sectionCard}>
       <div className={styles.cardHeader}>
         <div className={styles.iconBox}>
-          <i className={mode === 'info' ? "ph-fill ph-user-circle" : "ph-fill ph-lock-key"}></i>
+          <i
+            className={
+              mode === "info" ? "ph-fill ph-user-circle" : "ph-fill ph-lock-key"
+            }
+          ></i>
         </div>
         <div className={styles.cardHeaderText}>
           <h3>{title}</h3>
-          <p>{mode === 'info' ? 'Quản lý thông tin cá nhân của bạn' : 'Cập nhật mật khẩu để bảo vệ tài khoản'}</p>
+          <p>
+            {mode === "info"
+              ? "Quản lý thông tin cá nhân của bạn"
+              : "Cập nhật mật khẩu để bảo vệ tài khoản"}
+          </p>
         </div>
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit}>
-        {mode === 'info' ? (
+        {mode === "info" ? (
           <div className={styles.fieldsGrid}>
             <div className={styles.formGroup}>
               <label>Họ và tên</label>
               <div className={styles.inputWrapper}>
                 <i className="ph-bold ph-user"></i>
-                <input type="text" defaultValue={profile?.name || ""} placeholder="Nhập họ tên" />
+                <input
+                  type="text"
+                  placeholder="Nhập họ tên"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  disabled={isUpdatingInfo}
+                />
               </div>
             </div>
 
@@ -46,24 +167,38 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ title, mode, profile }) => {
               <label>Số điện thoại</label>
               <div className={styles.inputWrapper}>
                 <i className="ph-bold ph-phone"></i>
-                <input type="text" defaultValue={profile?.phone || ""} placeholder="Nhập số điện thoại" />
+                <input
+                  type="text"
+                  placeholder="Nhập số điện thoại"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={isUpdatingInfo}
+                />
               </div>
             </div>
 
-            <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
+            <div className={styles.formGroup} style={{ gridColumn: "span 2" }}>
               <label>Địa chỉ</label>
               <div className={styles.inputWrapper}>
                 <i className="ph-bold ph-map-pin"></i>
-                <input type="text" defaultValue={profile?.address || ""} placeholder="Nhập địa chỉ" />
+                <input
+                  type="text"
+                  placeholder="Nhập địa chỉ"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  disabled={isUpdatingInfo}
+                />
               </div>
             </div>
 
-            <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
+            <div className={styles.formGroup} style={{ gridColumn: "span 2" }}>
               <label>Giới thiệu bản thân</label>
               <textarea
                 rows={4}
-                defaultValue={profile?.bio || ""}
                 placeholder="Viết vài dòng giới thiệu về bạn..."
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                disabled={isUpdatingInfo}
               />
             </div>
           </div>
@@ -73,9 +208,24 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ title, mode, profile }) => {
               <label>Mật khẩu hiện tại</label>
               <div className={styles.inputWrapper}>
                 <i className="ph-bold ph-key"></i>
-                <input type={showCurrent ? "text" : "password"} placeholder="********" />
-                <button type="button" className={styles.eyeBtn} onClick={() => setShowCurrent(!showCurrent)}>
-                  <i className={showCurrent ? "ph-bold ph-eye-slash" : "ph-bold ph-eye"}></i>
+                <input
+                  type={showCurrent ? "text" : "password"}
+                  placeholder="********"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  disabled={isChangingPassword}
+                />
+                <button
+                  type="button"
+                  className={styles.eyeBtn}
+                  onClick={() => setShowCurrent(!showCurrent)}
+                  disabled={isChangingPassword}
+                >
+                  <i
+                    className={
+                      showCurrent ? "ph-bold ph-eye-slash" : "ph-bold ph-eye"
+                    }
+                  ></i>
                 </button>
               </div>
             </div>
@@ -84,9 +234,24 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ title, mode, profile }) => {
                 <label>Mật khẩu mới</label>
                 <div className={styles.inputWrapper}>
                   <i className="ph-bold ph-password"></i>
-                  <input type={showNew ? "text" : "password"} placeholder="********" />
-                  <button type="button" className={styles.eyeBtn} onClick={() => setShowNew(!showNew)}>
-                    <i className={showNew ? "ph-bold ph-eye-slash" : "ph-bold ph-eye"}></i>
+                  <input
+                    type={showNew ? "text" : "password"}
+                    placeholder="********"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    disabled={isChangingPassword}
+                  />
+                  <button
+                    type="button"
+                    className={styles.eyeBtn}
+                    onClick={() => setShowNew(!showNew)}
+                    disabled={isChangingPassword}
+                  >
+                    <i
+                      className={
+                        showNew ? "ph-bold ph-eye-slash" : "ph-bold ph-eye"
+                      }
+                    ></i>
                   </button>
                 </div>
               </div>
@@ -94,9 +259,24 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ title, mode, profile }) => {
                 <label>Xác nhận mật khẩu</label>
                 <div className={styles.inputWrapper}>
                   <i className="ph-bold ph-check-circle"></i>
-                  <input type={showConfirm ? "text" : "password"} placeholder="********" />
-                  <button type="button" className={styles.eyeBtn} onClick={() => setShowConfirm(!showConfirm)}>
-                    <i className={showConfirm ? "ph-bold ph-eye-slash" : "ph-bold ph-eye"}></i>
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    placeholder="********"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={isChangingPassword}
+                  />
+                  <button
+                    type="button"
+                    className={styles.eyeBtn}
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    disabled={isChangingPassword}
+                  >
+                    <i
+                      className={
+                        showConfirm ? "ph-bold ph-eye-slash" : "ph-bold ph-eye"
+                      }
+                    ></i>
                   </button>
                 </div>
               </div>
@@ -107,12 +287,21 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ title, mode, profile }) => {
         <div className={styles.formFooter}>
           <button
             type="submit"
-            className={mode === 'info' ? styles.btnPrimary : styles.btnSecondary}
+            className={
+              mode === "info" ? styles.btnPrimary : styles.btnSecondary
+            }
+            disabled={isUpdatingInfo || isChangingPassword}
           >
-            {mode === 'info' ? (
-              <><i className="ph-bold ph-check"></i> Lưu thay đổi</>
+            {mode === "info" ? (
+              <>
+                <i className="ph-bold ph-check"></i>{" "}
+                {isUpdatingInfo ? "Đang lưu..." : "Lưu thay đổi"}
+              </>
             ) : (
-              <><i className="ph-bold ph-shield-check"></i> Cập nhật mật khẩu</>
+              <>
+                <i className="ph-bold ph-shield-check"></i>{" "}
+                {isChangingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+              </>
             )}
           </button>
         </div>

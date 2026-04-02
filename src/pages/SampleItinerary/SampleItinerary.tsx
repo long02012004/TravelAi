@@ -1,20 +1,19 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import React, { useEffect, useMemo, useState } from "react";
 import styles from "./SampleItinerary.module.scss";
 
 // Import Components
-import ItineraryHero from "./components/ItineraryHero/ItineraryHero";
+import AICustomCTA from "./components/AICustomCTA/AICustomCTA";
+import CategoryTabs from "./components/CategoryTabs/CategoryTabs";
 import FilterSection from "./components/FilterSection/FilterSection";
 import ItineraryCard from "./components/ItineraryCard/ItineraryCard";
-import CategoryTabs from "./components/CategoryTabs/CategoryTabs";
-import AICustomCTA from "./components/AICustomCTA/AICustomCTA";
+import ItineraryHero from "./components/ItineraryHero/ItineraryHero";
 
 // Import Types
-import type { ItineraryType, FilterState } from "./types";
-import { getSampleItineraries } from "../../services/itineraryService";
-
+import { getAllItineraries } from "../../services/itineraryService";
+import type { FilterState, ItineraryType } from "./types";
 
 const SampleItinerary: React.FC = () => {
   const [itineraries, setItineraries] = useState<ItineraryType[]>([]);
@@ -35,8 +34,26 @@ const SampleItinerary: React.FC = () => {
     const fetchItineraries = async () => {
       try {
         setIsLoading(true);
-        const response = await getSampleItineraries();
-        setItineraries(response.data.DT);
+        const response = await getAllItineraries();
+        const templates = response.data.DT || [];
+        setItineraries(
+          templates.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            img: item.images?.[0] || "",
+            price: item.price,
+            maxPeople: item.maxPeople,
+            location: item.location,
+            duration: item.durationText || `${item.duration} ngày`,
+            rating: item.rating,
+            category: item.category,
+            steps: (item.steps || []).map((step: any) => ({
+              time: step.time || "",
+              activity: step.activity || "",
+              dist: step.dist || "",
+            })),
+          })),
+        );
       } catch (err) {
         console.error("Lỗi khi lấy lộ trình mẫu:", err);
         setError("Không thể tải dữ liệu lộ trình. Vui lòng thử lại sau.");
@@ -56,15 +73,18 @@ const SampleItinerary: React.FC = () => {
   const filteredData = useMemo(() => {
     if (!itineraries) return [];
     return itineraries.filter((item) => {
-      const matchLoc = filters.location === "all" || item.location === filters.location;
+      const matchLoc =
+        filters.location === "all" || item.location === filters.location;
       const matchPeople = item.maxPeople >= filters.people;
-      
+
       let matchPrice = true;
       if (filters.priceRange === "low") matchPrice = item.price < 600000;
-      else if (filters.priceRange === "mid") matchPrice = item.price >= 600000 && item.price <= 1200000;
+      else if (filters.priceRange === "mid")
+        matchPrice = item.price >= 600000 && item.price <= 1200000;
       else if (filters.priceRange === "high") matchPrice = item.price > 1200000;
 
-      const matchCat = activeCategory === "all" || item.category === activeCategory;
+      const matchCat =
+        activeCategory === "all" || item.category === activeCategory;
 
       return matchLoc && matchPeople && matchPrice && matchCat;
     });
@@ -72,7 +92,10 @@ const SampleItinerary: React.FC = () => {
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const displayedData = filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const displayedData = filteredData.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -91,9 +114,9 @@ const SampleItinerary: React.FC = () => {
       <main className={styles.mainContent}>
         <div className={styles.container}>
           <div data-aos="fade-up" data-aos-delay="200">
-            <CategoryTabs 
-              activeCategory={activeCategory} 
-              onCategoryChange={handleCategoryChange} 
+            <CategoryTabs
+              activeCategory={activeCategory}
+              onCategoryChange={handleCategoryChange}
             />
           </div>
 
@@ -106,11 +129,20 @@ const SampleItinerary: React.FC = () => {
             ) : error ? (
               <div className={styles.errorState}>
                 <p>{error}</p>
-                <button onClick={() => window.location.reload()} className={styles.retryBtn}>Thử lại</button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className={styles.retryBtn}
+                >
+                  Thử lại
+                </button>
               </div>
             ) : displayedData.length > 0 ? (
               displayedData.map((itinerary, index) => (
-                <div key={itinerary.id} data-aos="fade-up" data-aos-delay={index * 100}>
+                <div
+                  key={itinerary.id}
+                  data-aos="fade-up"
+                  data-aos-delay={index * 100}
+                >
                   <ItineraryCard data={itinerary} />
                 </div>
               ))
@@ -119,7 +151,11 @@ const SampleItinerary: React.FC = () => {
                 <p>😞 Không tìm thấy lộ trình phù hợp với tiêu chí của bạn.</p>
                 <button
                   onClick={() => {
-                    setFilters({ location: "all", priceRange: "all", people: 1 });
+                    setFilters({
+                      location: "all",
+                      priceRange: "all",
+                      people: 1,
+                    });
                     setActiveCategory("all");
                   }}
                   className={styles.resetBtn}
@@ -139,22 +175,26 @@ const SampleItinerary: React.FC = () => {
               >
                 <CaretLeft size={18} weight="bold" /> Trước
               </button>
-              
+
               <div className={styles.pageNumbers}>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    className={`${styles.pageBtn} ${currentPage === page ? styles.activePage : ""}`}
-                    onClick={() => handlePageChange(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      className={`${styles.pageBtn} ${currentPage === page ? styles.activePage : ""}`}
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
               </div>
 
               <button
                 className={styles.pageNavBtn}
-                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                onClick={() =>
+                  handlePageChange(Math.min(totalPages, currentPage + 1))
+                }
                 disabled={currentPage === totalPages}
               >
                 Sau <CaretRight size={18} weight="bold" />

@@ -1,19 +1,20 @@
-import React, { useState } from "react";
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 import {
   EnvelopeSimple,
-  LockKey,
   Eye,
   EyeSlash,
   FacebookLogo,
   GoogleLogo,
+  LockKey,
 } from "phosphor-react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import styles from "./Login.module.scss";
-import { useGoogleLogin } from "@react-oauth/google";
-import type { UserData } from "../../../services/userService";
+import { useMutation } from "../../../hooks/useApi";
+import type { LoginRequest } from "../../../services/userService";
 import { postLogin, postLoginGoogle } from "../../../services/userService";
-import axios from "axios";
+import styles from "./Login.module.scss";
 
 interface Props {
   onToggle: () => void;
@@ -24,24 +25,35 @@ const Login: React.FC<Props> = ({ onToggle, navigate }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Dùng mutation hook cho cleaner code
+  const { mutate: login, loading: isLoading } = useMutation(
+    (credentials: LoginRequest) => postLogin(credentials),
+  );
 
   // 1. Xử lý đăng nhập Google
   const loginWithGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        setIsLoading(true);
-        const response = await postLoginGoogle(tokenResponse.access_token);
+        const response = await postLoginGoogle({
+          token: tokenResponse.access_token,
+        });
         if (response.data && response.data.EC === 0) {
-          localStorage.setItem("token", `google_token_${response.data.DT.id}`);
+          // Lưu token và user info
+          const authData = response.data.DT;
+          localStorage.setItem("accessToken", authData.accessToken);
+          if (authData.refreshToken) {
+            localStorage.setItem("refreshToken", authData.refreshToken);
+          }
+          localStorage.setItem("user", JSON.stringify(authData.user));
           toast.success("Đăng nhập Google thành công! 🚀");
           navigate("/");
+        } else {
+          toast.error(response.data.EM || "Lỗi đăng nhập Google!");
         }
       } catch (error) {
         toast.error("Lỗi đăng nhập Google!");
         console.error("Error logging in with Google:", error);
-      } finally {
-        setIsLoading(false);
       }
     },
   });
@@ -61,32 +73,30 @@ const Login: React.FC<Props> = ({ onToggle, navigate }) => {
       return toast.error("Email không đúng định dạng!");
     }
 
-    setIsLoading(true);
     try {
-      // Gọi hàm postLogin (JSON Server trả về mảng DT: UserData[])
-      const response = await postLogin(cleanEmail, password);
-      const userList = response.data.DT as UserData[];
-
-      if (userList && userList.length > 0) {
-        const user = userList[0];
+      const result = await login({ email: cleanEmail, password });
+      if (result) {
+        const authData = result.user;
 
         // Lưu thông tin vào LocalStorage
-        localStorage.setItem("token", `mock_token_${user.id}`);
-        localStorage.setItem("username", user.username);
+        localStorage.setItem("accessToken", result.accessToken);
+        if (result.refreshToken) {
+          localStorage.setItem("refreshToken", result.refreshToken);
+        }
+        localStorage.setItem("user", JSON.stringify(authData));
+        localStorage.setItem("username", authData.username);
 
-        toast.success(`Chào mừng ${user.username} trở lại! 👋`);
+        toast.success(`Chào mừng ${authData.username} trở lại! 👋`);
         navigate("/");
       } else {
         toast.error("Email hoặc mật khẩu không chính xác!");
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        toast.error("Lỗi kết nối Server Local (8081)!");
+        toast.error("Lỗi kết nối Server (8081)!");
       } else {
         toast.error("Đã xảy ra lỗi không xác định!");
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 

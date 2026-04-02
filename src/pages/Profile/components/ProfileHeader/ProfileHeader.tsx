@@ -5,13 +5,21 @@ interface Props {
   name: string;
   email: string;
   badge: string;
-  avatar: string;
-  cover: string;
-  joinDate: string;
-  location: string;
+  avatar?: string;
+  cover?: string;
+  joinDate?: string;
+  location?: string;
 }
 
-const ProfileHeader: React.FC<Props> = ({ name, email, badge, avatar, cover, joinDate, location }) => {
+const ProfileHeader: React.FC<Props> = ({ 
+  name, 
+  email, 
+  badge, 
+  avatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop", 
+  cover = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200&auto=format&fit=crop", 
+  joinDate = "Tháng 3, 2024", 
+  location = "Việt Nam" 
+}) => {
   return (
     <div className={styles.profileHeaderWrapper}>
       <div className={styles.coverPhoto}>

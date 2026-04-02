@@ -1,4 +1,5 @@
 import type { AxiosResponse } from "axios";
+import type { BackendResponse } from "../types";
 import instance from "../utils/AxiosCustomize";
 
 // --- Interfaces ---
@@ -12,13 +13,9 @@ export interface TestimonialItem {
   delay: string;
 }
 
-export interface BackendResponse<T = unknown> {
-  EC: number;
-  EM: string;
-  DT: T;
-}
-
 // Lấy danh sách đánh giá khách hàng
-export const getTestimonials = (): Promise<AxiosResponse<BackendResponse<TestimonialItem[]>>> => {
+export const getTestimonials = (): Promise<
+  AxiosResponse<BackendResponse<TestimonialItem[]>>
+> => {
   return instance.get<BackendResponse<TestimonialItem[]>>("/testimonials");
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './ItineraryDetail.module.scss';
 import ItinerarySidebar from './components/ItinerarySidebar';
 import ItineraryMap from './components/ItineraryMap';
