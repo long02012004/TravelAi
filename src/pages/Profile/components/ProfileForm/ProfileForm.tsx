@@ -41,7 +41,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ title, mode, profile }) => {
                 <input type="text" defaultValue={profile?.name || ""} placeholder="Nhập họ tên" />
               </div>
             </div>
-            
+
             <div className={styles.formGroup}>
               <label>Số điện thoại</label>
               <div className={styles.inputWrapper}>
@@ -60,8 +60,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ title, mode, profile }) => {
 
             <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
               <label>Giới thiệu bản thân</label>
-              <textarea 
-                rows={4} 
+              <textarea
+                rows={4}
                 defaultValue={profile?.bio || ""}
                 placeholder="Viết vài dòng giới thiệu về bạn..."
               />
@@ -105,8 +105,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ title, mode, profile }) => {
         )}
 
         <div className={styles.formFooter}>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={mode === 'info' ? styles.btnPrimary : styles.btnSecondary}
           >
             {mode === 'info' ? (

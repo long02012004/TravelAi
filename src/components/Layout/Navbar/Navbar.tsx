@@ -11,7 +11,11 @@ import { toast } from "react-toastify"; // Đảm bảo đã import toast
 import styles from "./Navbar.module.scss";
 import { logo } from "../../../assets/images/img";
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  isSolid?: boolean;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ isSolid = false }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     const token = localStorage.getItem("token");
     return !!token;
@@ -61,9 +65,7 @@ const Navbar: React.FC = () => {
 
   return (
     <header
-      className={styles.navbar}
-      data-aos="fade-down"
-      data-aos-duration="800"
+      className={`${styles.navbar} ${isSolid ? styles.navbarSolid : ''}`}
     >
       <div className={styles.navContainer}>
         <Link to="/" className={styles.logo}>

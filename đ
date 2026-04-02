@@ -1,0 +1,212 @@
+[1mdiff --git a/db.json b/db.json[m
+[1mindex 88ddb29..9b343a4 100644[m
+[1m--- a/db.json[m
+[1m+++ b/db.json[m
+[36m@@ -55,9 +55,6 @@[m
+     }[m
+   ],[m
+   "travel-plans": [],[m
+[31m-<<<<<<< HEAD[m
+[31m-  "highlight_locations": [[m
+[31m-=======[m
+   "hotels": [[m
+     {[m
+       "id": "AZ-1024",[m
+[36m@@ -335,7 +332,6 @@[m
+     }[m
+   ],[m
+   "places": [[m
+[31m->>>>>>> cce5b65dfafbc353e525c0cae25eaa60e7348ffe[m
+     {[m
+       "id": "1",[m
+       "title": "Phố cổ Hội An",[m
+[36m@@ -392,10 +388,10 @@[m
+       "reviews": "4.2k",[m
+       "img": "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&q=80&w=800",[m
+       "desc": "Thiên đường nghỉ dưỡng với những bãi cát trắng mịn và làn nước trong xanh.",[m
+[31m-      "type": "pin"[m
+[31m-    }[m
+[31m-  ],[m
+[31m-  "highlight_hotels": [[m
+[32m+[m[32m      "type": "pin",[m
+[32m+[m[32m      "category": "beach",[m
+[32m+[m[32m      "previewVideo": "https://player.vimeo.com/external/403814144.sd.mp4?s=6953f93c20058b845dfd7cd6ecf7b49cb2e0ef75&profile_id=139&oauth2_token_id=57447761"[m
+[32m+[m[32m    },[m
+     {[m
+       "id": "6",[m
+       "title": "InterContinental Resort",[m
+[36m@@ -449,7 +445,8 @@[m
+       "reviews": "950",[m
+       "img": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=800",[m
+       "desc": "Mang đến hương vị ẩm thực Việt Nam tinh tế giữa không gian Đông Dương.",[m
+[31m-      "type": "food"[m
+[32m+[m[32m      "type": "food",[m
+[32m+[m[32m      "category": "restaurant"[m
+     },[m
+     {[m
+       "id": "11",[m
+[36m@@ -556,21 +553,9 @@[m
+       "category": "culture",[m
+       "type": "itinerary",[m
+       "steps": [[m
+[31m-        {[m
+[31m-          "time": "08:00",[m
+[31m-          "activity": "Đón khách tại sân bay Đà Nẵng",[m
+[31m-          "dist": "2km từ TT"[m
+[31m-        },[m
+[31m-        {[m
+[31m-          "time": "10:00",[m
+[31m-          "activity": "Check-in Bán đảo Sơn Trà",[m
+[31m-          "dist": "10km từ TT"[m
+[31m-        },[m
+[31m-        {[m
+[31m-          "time": "12:00",[m
+[31m-          "activity": "Thưởng thức Mì Quảng chính gốc",[m
+[31m-          "dist": "3km từ TT"[m
+[31m-        }[m
+[32m+[m[32m        { "time": "08:00", "activity": "Đón khách tại sân bay Đà Nẵng", "dist": "2km từ TT" },[m
+[32m+[m[32m        { "time": "10:00", "activity": "Check-in Bán đảo Sơn Trà", "dist": "10km từ TT" },[m
+[32m+[m[32m        { "time": "12:00", "activity": "Thưởng thức Mì Quảng chính gốc", "dist": "3km từ TT" }[m
+       ][m
+     },[m
+     {[m
+[36m@@ -585,21 +570,9 @@[m
+       "category": "culture",[m
+       "type": "itinerary",[m
+       "steps": [[m
+[31m-        {[m
+[31m-          "time": "15:00",[m
+[31m-          "activity": "Di chuyển đi Hội An",[m
+[31m-          "dist": "30km từ TT"[m
+[31m-        },[m
+[31m-        {[m
+[31m-          "time": "17:00",[m
+[31m-          "activity": "Thăm Chùa Cầu & Nhà Cổ",[m
+[31m-          "dist": "30.5km từ TT"[m
+[31m-        },[m
+[31m-        {[m
+[31m-          "time": "19:00",[m
+[31m-          "activity": "Ăn tối & Thả đèn hoa đăng",[m
+[31m-          "dist": "30.5km từ TT"[m
+[31m-        }[m
+[32m+[m[32m        { "time": "15:00", "activity": "Di chuyển đi Hội An", "dist": "30km từ TT" },[m
+[32m+[m[32m        { "time": "17:00", "activity": "Thăm Chùa Cầu & Nhà Cổ", "dist": "30.5km từ TT" },[m
+[32m+[m[32m        { "time": "19:00", "activity": "Ăn tối & Thả đèn hoa đăng", "dist": "30.5km từ TT" }[m
+       ][m
+     },[m
+     {[m
+[36m@@ -614,16 +587,8 @@[m
+       "category": "beach",[m
+       "type": "itinerary",[m
+       "steps": [[m
+[31m-        {[m
+[31m-          "time": "09:00",[m
+[31m-          "activity": "Tắm biển & Chụp hình",[m
+[31m-          "dist": "1km từ TT"[m
+[31m-        },[m
+[31m-        {[m
+[31m-          "time": "14:00",[m
+[31m-          "activity": "Chơi các trò chơi nước",[m
+[31m-          "dist": "1.2km từ TT"[m
+[31m-        }[m
+[32m+[m[32m        { "time": "09:00", "activity": "Tắm biển & Chụp hình", "dist": "1km từ TT" },[m
+[32m+[m[32m        { "time": "14:00", "activity": "Chơi các trò chơi nước", "dist": "1.2km từ TT" }[m
+       ][m
+     },[m
+     {[m
+[36m@@ -638,16 +603,8 @@[m
+       "category": "nature",[m
+       "type": "itinerary",[m
+       "steps": [[m
+[31m-        {[m
+[31m-          "time": "08:30",[m
+[31m-          "activity": "Thăm làng đá Non Nước",[m
+[31m-          "dist": "12km từ TT"[m
+[31m-        },[m
+[31m-        {[m
+[31m-          "time": "10:00",[m
+[31m-          "activity": "Leo núi Ngũ Hành Sơn",[m
+[31m-          "dist": "12km từ TT"[m
+[31m-        }[m
+[32m+[m[32m        { "time": "08:30", "activity": "Thăm làng đá Non Nước", "dist": "12km từ TT" },[m
+[32m+[m[32m        { "time": "10:00", "activity": "Leo núi Ngũ Hành Sơn", "dist": "12km từ TT" }[m
+       ][m
+     },[m
+     {[m
+[36m@@ -662,16 +619,8 @@[m
+       "category": "adventure",[m
+       "type": "itinerary",[m
+       "steps": [[m
+[31m-        {[m
+[31m-          "time": "05:00",[m
+[31m-          "activity": "Đón bình minh đỉnh Bàn Cờ",[m
+[31m-          "dist": "15km từ TT"[m
+[31m-        },[m
+[31m-        {[m
+[31m-          "time": "07:30",[m
+[31m-          "activity": "Ăn sáng cafe view biển",[m
+[31m-          "dist": "5km từ TT"[m
+[31m-        }[m
+[32m+[m[32m        { "time": "05:00", "activity": "Đón bình minh đỉnh Bàn Cờ", "dist": "15km từ TT" },[m
+[32m+[m[32m        { "time": "07:30", "activity": "Ăn sáng cafe view biển", "dist": "5km từ TT" }[m
+       ][m
+     },[m
+     {[m
+[36m@@ -686,16 +635,8 @@[m
+       "category": "beach",[m
+       "type": "itinerary",[m
+       "steps": [[m
+[31m-        {[m
+[31m-          "time": "08:00",[m
+[31m-          "activity": "Cano đi Cù Lao Chàm",[m
+[31m-          "dist": "45km từ TT"[m
+[31m-        },[m
+[31m-        {[m
+[31m-          "time": "10:30",[m
+[31m-          "activity": "Lặn ngắm san hô bãi Bắc",[m
+[31m-          "dist": "46km từ TT"[m
+[31m-        }[m
+[32m+[m[32m        { "time": "08:00", "activity": "Cano đi Cù Lao Chàm", "dist": "45km từ TT" },[m
+[32m+[m[32m        { "time": "10:30", "activity": "Lặn ngắm san hô bãi Bắc", "dist": "46km từ TT" }[m
+       ][m
+     },[m
+     {[m
+[36m@@ -710,16 +651,8 @@[m
+       "category": "nature",[m
+       "type": "itinerary",[m
+       "steps": [[m
+[31m-        {[m
+[31m-          "time": "14:00",[m
+[31m-          "activity": "Check-in lều trại",[m
+[31m-          "dist": "35km từ TT"[m
+[31m-        },[m
+[31m-        {[m
+[31m-          "time": "19:00",[m
+[31m-          "activity": "Tiệc BBQ ngoài trời",[m
+[31m-          "dist": "35km từ TT"[m
+[31m-        }[m
+[32m+[m[32m        { "time": "14:00", "activity": "Check-in lều trại", "dist": "35km từ TT" },[m
+[32m+[m[32m        { "time": "19:00", "activity": "Tiệc BBQ ngoài trời", "dist": "35km từ TT" }[m
+       ][m
+     },[m
+     {[m
+[36m@@ -734,16 +667,8 @@[m
+       "category": "culture",[m
+       "type": "itinerary",[m
+       "steps": [[m
+[31m-        {[m
+[31m-          "time": "19:00",[m
+[31m-          "activity": "Ngắm Cầu Rồng phun lửa",[m
+[31m-          "dist": "0km từ TT"[m
+[31m-        },[m
+[31m-        {[m
+[31m-          "time": "21:00",[m
+[31m-          "activity": "Dạo Chợ đêm Sơn Trà",[m
+[31m-          "dist": "1km từ TT"[m
+[31m-        }[m
+[32m+[m[32m        { "time": "19:00", "activity": "Ngắm Cầu Rồng phun lửa", "dist": "0km từ TT" },[m
+[32m+[m[32m        { "time": "21:00", "activity": "Dạo Chợ đêm Sơn Trà", "dist": "1km từ TT" }[m
+       ][m
+     },[m
+     {[m
+[36m@@ -758,16 +683,

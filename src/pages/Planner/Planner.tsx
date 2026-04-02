@@ -215,7 +215,10 @@ const Planner: React.FC = () => {
         </div>
 
         <div className={styles.submitWrapper}>
-          <button className={styles.btnSubmit}>
+          <button 
+            className={styles.btnSubmit}
+            onClick={() => navigate('/itinerary-detail')}
+          >
             <i className="ph-bold ph-lightning"></i> Tối ưu hóa lộ trình AI
           </button>
           <span className={styles.footerNote}>Mất khoảng 5-10 giây để xử lý dữ liệu thông minh</span>

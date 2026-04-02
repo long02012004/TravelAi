@@ -15,6 +15,7 @@ import Planner from "./pages/Planner/Planner";
 import Profile from "./pages/Profile/Profile";
 import Admin from "./pages/Admin/AdminDashboard";
 import ForgotPassword from "./pages/Auth/ForgotPassword/ForgotPassword";
+import ItineraryDetail from "./pages/ItineraryDetail/ItineraryDetail";
 
 function App() {
   return (
@@ -31,7 +32,6 @@ function App() {
             <Route path="/news" element={<News />} />
             <Route path="/planner" element={<Planner />} />
             <Route path="/profile" element={<Profile />} />
-
             <Route path="*" element={<div>404 Not Found</div>} />
           </Route>
 
@@ -40,6 +40,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/itinerary-detail" element={<ItineraryDetail />} />
         </Routes>
       </BrowserRouter>
 

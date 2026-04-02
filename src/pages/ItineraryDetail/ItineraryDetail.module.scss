@@ -1,0 +1,664 @@
+/* ==================== 
+   Itinerary Split-View Styling
+==================== */
+
+.splitViewContainer {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 72px);
+  /* Subtract header height */
+  overflow: hidden;
+  position: relative;
+  /* Essential for absolute map */
+}
+
+/* Sidebar Styling (Floating Panel) */
+.itinerarySidebar {
+  position: relative;
+  width: 440px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 28px;
+  margin: 24px;
+  height: calc(100vh - 72px - 48px);
+  max-height: calc(100vh - 72px - 48px);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  box-shadow: 0 20px 60px rgba(14, 165, 233, 0.1);
+}
+
+.itiSidebarHeader {
+  padding: 40px 32px 32px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent);
+}
+
+.itiTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.itiMainTitle {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.itiDaysTabs {
+  display: flex;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* var(--app-border-dark) */
+  overflow-x: auto;
+}
+
+.dayTab {
+  padding: 24px 28px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+  border: none;
+  background: transparent;
+}
+
+.dayTab:hover {
+  color: #0ea5e9;
+  opacity: 1;
+}
+
+.dayTab.active {
+  color: #0ea5e9;
+  opacity: 1;
+  font-weight: 800;
+}
+
+.dayTab.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 24px;
+  right: 24px;
+  height: 3px;
+  background: linear-gradient(to right, #0ea5e9, #00ffff);
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 -2px 10px rgba(14, 165, 233, 0.3);
+}
+
+.tabStats {
+  margin-left: auto;
+}
+
+/* Content Area */
+.itiContentScrollable {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 32px 24px;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(14, 165, 233, 0.3) transparent;
+}
+
+.itiContentScrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.itiContentScrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.itiContentScrollable::-webkit-scrollbar-thumb {
+  background-color: rgba(14, 165, 233, 0.3);
+  border-radius: 10px;
+}
+
+/* Journey Connector Line */
+.itiContentScrollable::before {
+  content: "";
+  position: absolute;
+  top: 40px;
+  left: 36px;
+  bottom: 100px;
+  width: 2px;
+  background: linear-gradient(to bottom, #0ea5e9, transparent);
+  opacity: 0.2;
+  z-index: 1;
+}
+
+.timeGroup {
+  position: relative;
+  padding-left: 20px;
+  border-left: 2px dashed #cbd5e1;
+  margin-bottom: 24px;
+}
+
+.groupTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 16px;
+  padding-left: 8px;
+}
+
+.itiItem {
+  background: white;
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.itiItem:hover {
+  transform: translateY(-2px);
+  border-color: #0ea5e9;
+}
+
+.itemActiveHighlight {
+  border-color: #0ea5e9;
+  background: rgba(14, 165, 233, 0.05);
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.1);
+}
+
+.itemNumber {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  background: #0ea5e9;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  z-index: 10;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(14,165,233,0.3);
+}
+
+.itemImg {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.itemImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.itiItem:hover .itemImg img {
+  transform: scale(1.1);
+}
+
+.itemInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.itemInfo h4 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.itemTime {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.itemBadge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.transportInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 8px 12px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.btnItiPreview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(14, 165, 233, 0.1);
+  border: 1.5px solid rgba(14, 165, 233, 0.2);
+  border-radius: 14px;
+  color: #0369a1;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btnItiPreview:hover {
+  background: #0ea5e9;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 255, 255, 0.2);
+}
+
+.btnItiPreviewActive {
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: white !important;
+  animation: pulseRed 2s infinite;
+}
+
+.btnAddSpot {
+  flex: 1;
+  padding: 14px;
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  background: white;
+  border-radius: 14px;
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btnAddSpot:hover {
+  background: rgba(0, 255, 255, 0.05);
+  border-color: #0ea5e9;
+  color: #0ea5e9;
+}
+
+/* Map Area */
+.mapViewContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background: #f8fafc;
+}
+
+.mapOverlaysContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.mapCtrlStack {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.ctrlGroup {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.ctrlGroup button {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: none;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #1e293b;
+  transition: all 0.2s;
+}
+
+.ctrlGroup button:last-child {
+  border-bottom: none;
+}
+
+.ctrlGroup button:hover,
+.ctrlBtn:hover {
+  background: #f8fafc;
+  color: #0ea5e9;
+}
+
+.ctrlBtn {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #1e293b;
+  transition: all 0.2s;
+}
+
+/* Search Area */
+.mapTopSearch {
+  position: absolute;
+  top: 32px;
+  left: calc(464px + (100vw - 464px) / 2); /* Căn giữa phần bản đồ còn lại */
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 450px;
+  pointer-events: auto;
+  z-index: 1001;
+}
+
+.searchWrap {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px; /* Giảm bo tròn một chút để dropdown nhìn tự nhiên hơn */
+  padding: 8px 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.searchWrap:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.searchInputContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.searchInputWrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.searchInput {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding-right: 36px;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.btnClearInline {
+  position: absolute;
+  right: 0;
+  background: transparent;
+  border: none;
+  padding: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnFindNow {
+  background: linear-gradient(135deg, #0ea5e9, #00ffff);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btnFindNow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);
+}
+
+.searchSuggestions {
+  margin-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 12px;
+  border-radius: 20px;
+}
+
+.suggestionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.suggestionItem:hover {
+  background: rgba(0, 255, 255, 0.1);
+  transform: translateX(4px);
+}
+
+.suggestionInfo h5 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.suggestionInfo p {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+/* Marker Styles (Global but scoped with custom prefix) */
+:global(.iti-map-marker-wrap) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:global(.iti-map-marker) {
+  width: 32px;
+  height: 32px;
+  background: white;
+  border: 4px solid #0ea5e9;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+:global(.iti-map-marker) span {
+  transform: rotate(45deg);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #0ea5e9;
+}
+
+/* Modal styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 20px;
+  max-width: 400px;
+  width: 90%;
+  padding: 24px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modalHeader h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.formGroup input, .formGroup select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  background: white;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.formGroup input:focus, .formGroup select:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.formActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btnCancel, .btnSubmit {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.btnCancel {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.btnSubmit {
+  background: #0ea5e9;
+  color: white;
+}
+
+.btnSubmit:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Animations */
+@keyframes pulseRed {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@media screen and (max-width: 900px) {
+  .splitViewContainer {
+    flex-direction: column;
+  }
+  .mapViewContainer {
+    position: relative;
+    height: 45vh;
+  }
+  .itinerarySidebar {
+    width: 100%;
+    margin: 0;
+    height: 55vh;
+    max-height: 55vh;
+    border-radius: 32px 32px 0 0;
+    margin-top: -24px;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
+  }
+  .mapTopSearch {
+    left: 50%;
+    top: 24px;
+    transform: translateX(-50%);
+  }
+}

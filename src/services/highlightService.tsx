@@ -42,4 +42,3 @@ export const getHighlightHotels = (): Promise<AxiosResponse<BackendResponse<High
 export const getHighlightRestaurants = (): Promise<AxiosResponse<BackendResponse<HighlightItem[]>>> => {
   return instance.get<BackendResponse<HighlightItem[]>>("/places?type=food");
 };
-
