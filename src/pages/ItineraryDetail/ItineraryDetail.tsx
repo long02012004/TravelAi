@@ -105,6 +105,7 @@ const ItineraryDetail: React.FC = () => {
         <ItineraryMap 
           points={points} 
           activePointId={activePointId}
+          onPointClick={(id) => setActivePointId(id)}
           isPreviewing={isPreviewing}
           onAddSpot={(point) => handleAddSpot(point)}
         />

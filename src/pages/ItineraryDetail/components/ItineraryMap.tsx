@@ -9,6 +9,7 @@ import axios from 'axios';
 interface Props {
   points: RoutePoint[];
   activePointId: string | null;
+  onPointClick: (id: string) => void;
   isPreviewing: boolean;
   onAddSpot: (point: Omit<RoutePoint, 'id'>) => void;
 }
@@ -112,7 +113,7 @@ const MapControls: React.FC = () => {
 };
 
 
-const ItineraryMap: React.FC<Props> = ({ points, activePointId, isPreviewing, onAddSpot }) => {
+const ItineraryMap: React.FC<Props> = ({ points, activePointId, onPointClick, isPreviewing, onAddSpot }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -244,9 +245,26 @@ const ItineraryMap: React.FC<Props> = ({ points, activePointId, isPreviewing, on
             key={point.id} 
             position={[point.lat, point.lng]} 
             icon={createNumberedIcon(idx + 1)}
+            eventHandlers={{
+              click: () => onPointClick(point.id)
+            }}
           >
-            <Popup>
-              <b>{point.name}</b><br />Điểm {idx + 1} trong lịch trình
+            <Popup className="iti-custom-popup">
+              <div className={styles.popupCard}>
+                {point.imageUrl && (
+                  <div className={styles.popupImg}>
+                    <img src={point.imageUrl} alt={point.name} />
+                  </div>
+                )}
+                <div className={styles.popupContent}>
+                   <div className={styles.popupMeta}>
+                      <span className={styles.popupTime}>{point.time}</span>
+                      <span className={styles.popupTag}>{point.type}</span>
+                   </div>
+                   <h4 className={styles.popupTitle}>{point.name}</h4>
+                   <p className={styles.popupDesc}>{point.description}</p>
+                </div>
+              </div>
             </Popup>
           </Marker>
         ))}

@@ -52,6 +52,20 @@
       "role": "USER",
       "status": "INACTIVE",
       "createdAt": "2026-03-28T06:41:45.262Z"
+    },
+    {
+      "username": "Phước Long",
+      "email": "Long@gmail.com",
+      "password": "Long123@",
+      "createdAt": "2026-04-02T10:15:23.938Z",
+      "id": "J2gdNKIXRco"
+    },
+    {
+      "username": "Phước Long",
+      "email": "Long1@gmail.com",
+      "password": "Long123@",
+      "createdAt": "2026-04-02T10:16:09.339Z",
+      "id": "sNuV76xWmVg"
     }
   ],
   "travel-plans": [],
@@ -546,7 +560,7 @@
       "maxPeople": 2,
       "location": "Đà Nẵng",
       "duration": "3 Tiếng",
-      "rating": 5.0,
+      "rating": 5,
       "category": "beach",
       "type": "itinerary",
       "steps": [
@@ -565,42 +579,42 @@
   ],
   "aiRecommendations": [
     {
-      "id": 1,
+      "id": "1",
       "title": "Địa điểm HOT #1",
       "image": "https://picsum.photos/200/120?sig=1"
     },
     {
-      "id": 2,
+      "id": "2",
       "title": "Địa điểm HOT #2",
       "image": "https://picsum.photos/200/120?sig=2"
     },
     {
-      "id": 3,
+      "id": "3",
       "title": "Địa điểm HOT #3",
       "image": "https://picsum.photos/200/120?sig=3"
     },
     {
-      "id": 4,
+      "id": "4",
       "title": "Địa điểm HOT #4",
       "image": "https://picsum.photos/200/120?sig=4"
     },
     {
-      "id": 5,
+      "id": "5",
       "title": "Địa điểm HOT #5",
       "image": "https://picsum.photos/200/120?sig=5"
     },
     {
-      "id": 6,
+      "id": "6",
       "title": "Địa điểm HOT #6",
       "image": "https://picsum.photos/200/120?sig=6"
     },
     {
-      "id": 7,
+      "id": "7",
       "title": "Địa điểm HOT #7",
       "image": "https://picsum.photos/200/120?sig=7"
     },
     {
-      "id": 8,
+      "id": "8",
       "title": "Địa điểm HOT #8",
       "image": "https://picsum.photos/200/120?sig=8"
     }
